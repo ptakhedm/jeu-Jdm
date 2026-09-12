@@ -198,7 +198,16 @@ function initBoard() {
     for (let i = 0; i <= 71; i++) {
         let coord = mapCoord[i] || {r: 0, c: 0};
         let labelInfo = casesMaths[i] || "";
-        let isDepart = (i === 0) ? "case-depart" : "";
+        const specialClasses = {
+            5: "case-pont",
+            18: "case-hotel",
+            30: "case-puits",
+            41: "case-labyrinthe",
+            47: "case-prison",
+            53: "case-mort",
+            71: "case-arrivee"
+        };
+        let isDepart = (i === 0) ? "case-depart" : (specialClasses[i] || "");
         
         let tokensHTML = '';
         for (let [team, pos] of Object.entries(positionsEquipes)) {
