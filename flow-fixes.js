@@ -4,7 +4,7 @@
 
   // Durée de débogage : la première question est toujours limitée à 3 secondes.
   Object.values(questionSets).forEach(questions => {
-    if (questions[0]) questions[0][1] = 3;
+    questions.forEach(question => { question[1] = 3; });
   });
 
   // L’écran de jeu n’a plus de sélecteur de classe : la classe est choisie avant l’entrée.
@@ -16,10 +16,6 @@
     if (!selected) return;
     state.activeClass = selected.value;
     state.current = state.teacher.classes.indexOf(state.activeClass);
-    $("active-class-name").textContent = state.activeClass;
-    const classIndex = classNames.indexOf(state.activeClass);
-    $("active-class-pawn").textContent = classIndex + 1;
-    $("active-class-pawn").style.background = classColors[classIndex];
     $("class-selection-screen").classList.add("is-hidden");
     $("game-screen").classList.remove("is-hidden");
     renderBoard();
@@ -108,13 +104,24 @@
     }
     $("question-modal").classList.add("is-hidden");
     await moveClass(name, delta);
-    const landedOnPrime = correct && isPrime(state.classes[name].pos);
+    const landedOnPrime = !correct && isPrime(state.classes[name].pos);
     if (landedOnPrime) {
-      notify("⭐ Case première ! Bonus de 3 cases !");
-      await moveClass(name, 3);
+      notify("⭐ Case première après le recul ! Bonus de 2 cases !");
+      await moveClass(name, 2);
     }
-    state.waitingNext = true;
-    freshLaunchButton.textContent = "➡️ Question suivante";
-    $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
+    const lastQuestion = state.question === questionSets[state.series].length - 1;
+    if (lastQuestion) {
+      state.classes[name].rounds += 1;
+      renderClasses();
+      state.waitingNext = false;
+      freshLaunchButton.textContent = "🏁 Partie terminée";
+      freshLaunchButton.disabled = true;
+      $("move-message").textContent = `${name} a terminé sa série : tour ${state.classes[name].rounds}.`;
+      notify("🏁 Les 5 questions sont terminées !");
+    } else {
+      state.waitingNext = true;
+      freshLaunchButton.textContent = "➡️ Question suivante";
+      $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
+    }
   });
 })();
