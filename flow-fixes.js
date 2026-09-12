@@ -108,6 +108,11 @@
     }
     $("question-modal").classList.add("is-hidden");
     await moveClass(name, delta);
+    const landedOnPrime = correct && isPrime(state.classes[name].pos);
+    if (landedOnPrime) {
+      notify("⭐ Case première ! Bonus de 3 cases !");
+      await moveClass(name, 3);
+    }
     state.waitingNext = true;
     freshLaunchButton.textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
