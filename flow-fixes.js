@@ -135,7 +135,7 @@
       state.classes[name].rounds += 1;
       renderClasses();
       state.waitingNext = false;
-      freshLaunchButton.textContent = "↩️ Revenir à la connexion";
+      freshLaunchButton.textContent = "↩️ Quitter";
       freshLaunchButton.disabled = false;
       state.finished = true;
       $("move-message").textContent = `${name} a terminé sa série : tour ${state.classes[name].rounds}.`;
