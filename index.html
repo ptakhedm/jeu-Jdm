@@ -3,70 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Jeu de l'Oie Mathématique pour les classes de collège">
-  <title>Jeu de l'Oie Mathématique</title>
+  <title>Le Grand Jeu de l’Oie Mathématique</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" aria-live="polite"></div>
 
-  <main id="login-screen" class="login">
+  <main id="login-screen" class="login-screen">
     <section class="login-card">
-      <div class="logo" aria-hidden="true">🎲</div>
-      <h1>Jeu de l’Oie Mathématique</h1>
-      <p>Un espace de classe pour faire progresser les équipes grâce au calcul mental.</p>
+      <div class="logo-goose">🪿</div>
+      <p class="eyebrow">AVENTURE MATHÉMATIQUE</p>
+      <h1>Le Grand Jeu de l’Oie</h1>
+      <p>Une course par équipes jusqu’au Palais des Mathématiques.</p>
       <form id="login-form">
-        <div class="field">
-          <label for="password">Mot de passe professeur</label>
-          <input id="password" type="password" autocomplete="current-password" placeholder="Entrez le mot de passe" required>
-        </div>
-        <button class="btn full" type="submit">Entrer dans la séance</button>
+        <input id="password" type="password" placeholder="Mot de passe professeur" required>
+        <button class="game-button primary" type="submit">Commencer la partie</button>
       </form>
+      <small>Mot de passe de démonstration : maths2026</small>
     </section>
   </main>
 
-  <main id="app" class="app hidden">
-    <header class="topbar">
-      <div><h1>🏆 Le Grand Jeu de l’Oie Mathématique</h1><small>Collège · plateau de 72 cases · animation de classe</small></div>
-      <div class="topbar-actions"><span>👩‍🏫 Professeur</span><button id="logout" class="btn" type="button">Déconnexion</button></div>
+  <main id="game-screen" class="game-screen is-hidden">
+    <header class="game-header">
+      <div class="brand"><span class="brand-icon">🪿</span><div><p class="eyebrow">LA GRANDE COURSE</p><h1>Jeu de l’Oie Mathématique</h1></div></div>
+      <div class="header-actions"><button id="question-open" class="game-button gold">🎯 Question grand écran</button><button id="logout" class="icon-button" title="Déconnexion">↪</button></div>
     </header>
 
-    <div class="layout">
-      <section class="card board-card">
-        <h2>Le parcours des mathématiciens</h2>
-        <p class="subtitle">Une spirale de 72 cases, du départ au Palais des Mathématiques.</p>
-        <div class="board-shell"><div id="board" class="board" aria-label="Plateau de jeu en spirale"></div></div>
-        <div class="legend" aria-label="Légende du plateau"><span>🔵 Départ</span><span>🟡 Arrivée</span><span>🟢 Bonus / pont</span><span>🔴 Piège</span><span>🟣 Pause</span></div>
-        <div id="team-dashboard" class="team-dashboard" aria-label="Tableau de bord des équipes"></div>
+    <section class="game-layout">
+      <section class="board-panel">
+        <div class="board-title"><div><p class="eyebrow">LE PLATEAU</p><h2>En route vers le Palais !</h2></div><span id="turn-badge" class="turn-badge">Tour de l’Équipe 1</span></div>
+        <div class="board-frame"><svg id="game-board" viewBox="0 0 900 760" role="img" aria-label="Plateau de jeu de l'oie mathématique"></svg></div>
+        <div id="team-list" class="team-list"></div>
       </section>
 
-      <aside class="controls">
-        <section class="card">
-          <h2>1. Préparer la séance</h2>
-          <div class="config-grid">
-            <div class="field"><label for="class-select">Classe</label><select id="class-select"><option>6ème A</option><option>6ème B</option><option>6ème C</option><option>6ème D</option></select></div>
-            <div class="field"><label for="series-select">Série de calcul mental</label><select id="series-select"><option>Série 1</option><option>Série 2</option><option>Série 3</option><option>Série 4</option><option>Série 5</option><option>Série 6</option><option>Série 7</option><option>Série 8</option><option>Série 9</option><option selected>Série 10</option><option>Série 11</option></select></div>
-            <button id="load-session" class="btn green" type="button">Charger</button>
-          </div>
+      <aside class="side-panel">
+        <section class="play-card current-card">
+          <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">Équipe 1</h2></div></div>
+          <div class="dice-area"><div id="dice" class="dice">?</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le dé</button></div>
+          <p id="move-message" class="move-message">Lance le dé pour avancer sur le parcours.</p>
         </section>
 
-        <section class="card">
-          <h2>2. Question en cours</h2>
-          <div class="question"><div class="question-meta"><span id="question-counter">Question 1 / 5</span><span id="question-time">Temps conseillé : 45 s</span></div><h3 id="question-text">La question va apparaître ici.</h3></div>
-          <div class="timer"><strong id="timer-display" class="timer-display">45 s</strong><button id="start-timer" class="btn blue" type="button">⏱️ Lancer</button><button id="show-correction" class="btn gold" type="button">💡 Correction</button></div>
-          <div id="correction" class="correction hidden"><strong>Correction : </strong><span id="correction-text"></span></div>
-          <nav class="nav"><button id="previous" class="btn" type="button">← Précédente</button><button id="next" class="btn" type="button">Suivante →</button></nav>
+        <section class="play-card question-card">
+          <div class="card-heading"><span class="step">02</span><div><p class="eyebrow">DÉFI MATHÉMATIQUE</p><h2>La question du tour</h2></div></div>
+          <p id="mini-question">Cliquez sur « Question grand écran » pour afficher le défi à toute la classe.</p>
+          <button id="question-open-2" class="game-button secondary full-button">Afficher la question</button>
         </section>
 
-        <section class="card">
-          <h2>3. Tirage au sort de la classe</h2>
-          <p class="subtitle">Le nom est tiré dans la classe sélectionnée.</p>
-          <button id="draw-student" class="btn full" type="button">🎲 Désigner un élève</button>
-          <div id="draw-result" class="draw-result" aria-live="polite">Prêt pour le tirage…</div>
+        <section class="play-card class-card">
+          <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">MAÎTRE DU JEU</p><h2>Classe et équipe</h2></div></div>
+          <label for="class-select">Classe</label><select id="class-select"><option>6ème A</option><option>6ème B</option><option>6ème C</option><option>6ème D</option></select>
+          <button id="draw-student" class="game-button purple full-button">🎲 Tirer un élève</button><div id="student-result" class="student-result">Prêt !</div>
         </section>
       </aside>
-    </div>
+    </section>
   </main>
+
+  <section id="question-modal" class="question-modal is-hidden" aria-modal="true" role="dialog">
+    <div class="question-stage">
+      <button id="question-close" class="modal-close" aria-label="Fermer">×</button>
+      <div class="stage-top"><span class="stage-badge">DÉFI DU TOUR</span><span id="stage-team">Équipe 1</span></div>
+      <p id="stage-counter" class="stage-counter">Question 1 / 5</p>
+      <h2 id="stage-question">Question</h2>
+      <div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div>
+      <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span></div>
+      <div class="stage-actions"><button id="timer-start" class="game-button gold">▶ Lancer le chrono</button><button id="show-correction" class="game-button secondary">💡 Voir la correction</button><button id="next-question" class="game-button primary">Question suivante →</button></div>
+    </div>
+  </section>
   <script src="app.js"></script>
 </body>
 </html>
