@@ -30,6 +30,18 @@
     </section>
   </main>
 
+  <main id="class-selection-screen" class="login-screen is-hidden">
+    <section class="login-card class-selection-card">
+      <div class="logo-goose">🎯</div>
+      <p class="eyebrow">SESSION DU PROFESSEUR</p>
+      <h1>Choisir sa classe</h1>
+      <p id="class-selection-intro">Avec quelle classe jouez-vous aujourd’hui ?</p>
+      <div id="owned-class-choices" class="owned-class-choices"></div>
+      <button id="start-class" class="game-button primary" type="button">Entrer sur le plateau</button>
+      <button id="back-to-login" class="text-button" type="button">Changer de professeur</button>
+    </section>
+  </main>
+
   <main id="game-screen" class="game-screen is-hidden">
     <header class="game-header">
       <div class="brand"><span class="brand-icon">🪿</span><div><p class="eyebrow">LA GRANDE COURSE</p><h1>Jeu de l’Oie Mathématique</h1><small id="teacher-session"></small></div></div>
@@ -58,7 +70,7 @@
 
         <section class="play-card class-card">
           <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">MAÎTRE DU JEU</p><h2>Classes et pions</h2></div></div>
-          <p class="class-help">Chaque classe possède son propre pion. Tous les pions restent visibles pour tous les professeurs.</p>
+          <p class="class-help">Chaque classe possède son propre pion. Cette session affiche uniquement vos classes.</p>
           <label for="class-select">Élève à tirer</label><select id="class-select"><option>6ème 1</option><option>6ème 2</option><option>6ème 3</option><option>6ème 4</option><option>6ème 5</option></select>
           <button id="draw-student" class="game-button purple full-button">🎲 Tirer un élève</button><div id="student-result" class="student-result">Prêt !</div>
         </section>
