@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -24,26 +25,46 @@
             padding: 20px;
         }
 
-        /* Écran de Connexion */
+        /* Système de notifications / alertes visuelles */
+        #notification-banner {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+        .banner-error { background-color: var(--danger); }
+        .banner-success { background-color: var(--secondary); }
+        .banner-info { background-color: var(--primary); }
+
+        /* Écran de Connexion Sécurisé */
         #login-screen {
-            max-width: 400px;
+            max-width: 420px;
             margin: 80px auto;
             background: white;
-            padding: 30px;
+            padding: 35px;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             text-align: center;
+            border: 1px solid #e2e8f0;
         }
         #login-screen input {
             width: 100%;
             padding: 12px;
-            margin: 10px 0 20px 0;
+            margin: 15px 0;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             box-sizing: border-box;
+            font-size: 1rem;
         }
 
-        /* Application principale (cachée par défaut) */
+        /* Application principale (masquée par défaut) */
         #app-container { display: none; }
 
         header {
@@ -95,11 +116,14 @@
             border: none;
             cursor: pointer;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
         }
         button:hover { background: var(--primary-dark); }
+        button:active { transform: scale(0.98); }
         button.btn-accent { background: var(--accent); }
+        button.btn-accent:hover { background: #d97706; }
         button.btn-success { background: var(--secondary); }
+        button.btn-success:hover { background: #059669; }
 
         .question-box {
             background: #f0fdf4;
@@ -133,12 +157,8 @@
             display: none;
         }
 
-        /* --- LE PLATEAU DE JEU VISUEL (PARCOURS DE CASES) --- */
-        .board-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        /* Plateau de Jeu Visuel (Parcours de cases) */
+        .board-container { display: flex; flex-direction: column; gap: 15px; }
         .team-track {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -177,11 +197,7 @@
             transform: scale(1.1);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .team-controls {
-            margin-top: 8px;
-            display: flex;
-            gap: 5px;
-        }
+        .team-controls { margin-top: 8px; display: flex; gap: 5px; }
         .team-controls button { padding: 4px 10px; font-size: 0.85rem; }
 
         .student-draw-box {
@@ -206,16 +222,18 @@
 </head>
 <body>
 
-    <!-- ÉCRAN DE CONNEXION SÉCURISÉ -->
+    <!-- Bannière de notification dynamique -->
+    <div id="notification-banner"></div>
+
+    <!-- Écran de Connexion Sécurisé -->
     <div id="login-screen">
         <h2>🔒 Espace Professeur</h2>
-        <p style="font-size: 0.9rem; color: #64748b;">Entrez le mot de passe de l'équipe de maths :</p>
-        <input type="password" id="password-input" placeholder="Mot de passe...">
+        <p style="font-size: 0.9rem; color: #64748b;">Accès sécurisé pour l'équipe de mathématiques</p>
+        <input type="password" id="password-input" placeholder="Mot de passe professeur..." onkeypress="if(event.key === 'Enter') verifierLogin()">
         <button onclick="verifierLogin()" style="width: 100%;">Se connecter</button>
-        <p id="login-error" style="color: red; font-size: 0.85rem; margin-top: 10px; display: none;">Mot de passe incorrect.</p>
     </div>
 
-    <!-- APPLICATION PRINCIPALE -->
+    <!-- Application Principale -->
     <div id="app-container">
         <header>
             <h1>🏆 Le Grand Jeu de Calcul Mental - Collège</h1>
@@ -291,16 +309,14 @@
                 <div class="card">
                     <h2>🏅 Plateau de Jeu (Parcours)</h2>
                     <p style="font-size: 0.85rem; color: #64748b; margin-top: 0;">Progression des 6 équipes sur le plateau de cases.</p>
-                    <div class="board-container" id="board-container">
-                        <!-- Généré dynamiquement par script.js -->
-                    </div>
+                    <div class="board-container" id="board-container"></div>
                     <button onclick="reinitialiserScores()" style="width: 100%; margin-top: 20px; background: #64748b; font-size: 0.9rem;">Remettre le plateau à zéro</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Script JavaScript externe -->
+    <!-- Script JavaScript séparé -->
     <script src="script.js"></script>
 </body>
 </html>
