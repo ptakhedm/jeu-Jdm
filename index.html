@@ -1,482 +1,72 @@
-<!-- index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeu de l'Oie Mathématique - Collège</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --secondary: #059669;
-            --accent: #d97706;
-            --danger: #dc2626;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #0f172a;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-        }
-
-        #notification-banner {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            display: none;
-            transition: opacity 0.3s ease;
-        }
-        .banner-error { background-color: var(--danger); }
-        .banner-success { background-color: var(--secondary); }
-        .banner-info { background-color: var(--primary); }
-
-        #login-screen {
-            max-width: 400px;
-            margin: 100px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-        #login-screen input {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        #app-container { display: none; }
-
-        header {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-
-        header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
-        .user-info { font-size: 0.9rem; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; }
-
-        /* --- Disposition synchrone : Plateau à gauche, Commandes/Questions à droite --- */
-        .workspace-grid {
-            display: grid;
-            grid-template-columns: 1.6fr 0.8fr;
-            gap: 20px;
-            align-items: start;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-
-        h2 { margin-top: 0; color: #1e293b; font-size: 1.15rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-weight: 600; }
-
-        .config-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
-        .config-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; }
-        label { font-size: 0.85rem; font-weight: 600; color: #475569; }
-        select, button {
-            padding: 9px 12px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.95rem;
-            outline: none;
-        }
-        select { background: white; cursor: pointer; }
-        
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s, transform 0.1s;
-        }
-        button:hover { background: var(--primary-dark); }
-        button:active { transform: scale(0.98); }
-        button.btn-accent { background: var(--accent); }
-        button.btn-success { background: var(--secondary); }
-
-        .question-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 12px 0;
-        }
-        .question-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: #64748b; margin-bottom: 6px; }
-        .question-title { font-size: 1.1rem; font-weight: 700; color: #065f46; margin-bottom: 12px; }
-        
-        .timer-container { display: flex; align-items: center; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
-        .timer-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--danger);
-            background: #fff1f2;
-            padding: 4px 15px;
-            border-radius: 8px;
-            border: 1px solid #fecaca;
-            min-width: 75px;
-            text-align: center;
-        }
-
-        .correction-box {
-            background: #fffbeb;
-            border-left: 4px solid var(--accent);
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 0 8px 8px 0;
-            display: none;
-            font-size: 0.9rem;
-        }
-
-        .student-draw-box {
-            background: #faf5ff;
-            border: 1px solid #e9d5ff;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-        }
-        .student-result {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #7e22ce;
-            margin-top: 10px;
-            min-height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .nav-buttons { display: flex; justify-content: space-between; margin-top: 12px; }
-
-        /* --- PLATEAU DE JEU ÉLÉGANT (SPIRALE 72 CASES) --- */
-        .board-container {
-            position: relative;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 18% 20%, rgba(56, 189, 248, 0.35) 0 2px, transparent 3px),
-                radial-gradient(circle at 82% 72%, rgba(167, 139, 250, 0.3) 0 2px, transparent 3px),
-                radial-gradient(circle at 50% 50%, rgba(30, 41, 90, 0.85), transparent 62%),
-                linear-gradient(135deg, #07152f, #111b46 48%, #25104c);
-            background-size: 115px 115px, 165px 165px, auto, auto;
-            border: 4px solid #6366f1;
-            border-radius: 18px;
-            padding: 14px;
-            box-shadow: inset 0 0 30px rgba(56, 189, 248, 0.2), 0 12px 25px rgba(15, 23, 42, 0.28);
-        }
-        .board-container::before,
-        .board-container::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(1px);
-        }
-        .board-container::before {
-            width: 180px;
-            height: 180px;
-            top: -90px;
-            right: -45px;
-            background: radial-gradient(circle, rgba(244, 114, 182, 0.5), transparent 68%);
-        }
-        .board-container::after {
-            width: 220px;
-            height: 220px;
-            bottom: -130px;
-            left: -100px;
-            background: radial-gradient(circle, rgba(34, 211, 238, 0.3), transparent 68%);
-        }
-        /* Grille en spirale de 72 cases (9 colonnes x 9 lignes) */
-        .board-grid {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            grid-template-rows: repeat(9, minmax(62px, 68px));
-            gap: 5px;
-        }
-        .case-plateau {
-            background: linear-gradient(145deg, rgba(224, 242, 254, 0.98), rgba(186, 230, 253, 0.92));
-            border: 1px solid rgba(125, 211, 252, 0.95);
-            border-radius: 10px;
-            padding: 4px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.66rem;
-            text-align: center;
-            position: relative;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 3px 7px rgba(2, 6, 23, 0.28);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-        }
-        .case-plateau::after {
-            content: '✦';
-            position: absolute;
-            right: 4px;
-            top: 1px;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.55rem;
-        }
-        .case-plateau:hover {
-            transform: translateY(-3px) scale(1.04);
-            z-index: 5;
-            filter: brightness(1.08);
-            box-shadow: 0 7px 14px rgba(2, 6, 23, 0.4), 0 0 12px rgba(125, 211, 252, 0.6);
-        }
-        
-        /* Case départ mise en valeur */
-        .case-depart {
-            background: linear-gradient(145deg, #fde68a, #f59e0b) !important;
-            border: 2px solid #fef3c7 !important;
-            box-shadow: 0 0 14px rgba(251, 191, 36, 0.85), inset 0 1px 0 rgba(255,255,255,0.7);
-        }
-        .case-depart .num { color: #431407 !important; font-size: 0.78rem !important; }
-
-        .case-pont, .case-bonus { background: linear-gradient(145deg, #bbf7d0, #34d399); }
-        .case-hotel, .case-prison { background: linear-gradient(145deg, #ddd6fe, #8b5cf6); }
-        .case-puits, .case-labyrinthe, .case-mort {
-            background: linear-gradient(145deg, #fecdd3, #e11d48);
-            border-color: #fda4af;
-        }
-        .case-arrivee {
-            background: linear-gradient(145deg, #fef08a, #f97316) !important;
-            border: 2px solid #fde68a !important;
-            box-shadow: 0 0 18px rgba(251, 146, 60, 0.85), inset 0 1px 0 rgba(255,255,255,0.75);
-        }
-        .case-puits .num, .case-labyrinthe .num, .case-mort .num,
-        .case-hotel .num, .case-prison .num, .case-arrivee .num,
-        .case-pont .num, .case-bonus .num { color: #172554; }
-
-        .case-plateau .num {
-            font-weight: bold;
-            color: #075985;
-            font-size: 0.72rem;
-        }
-        .case-plateau .math-info {
-            font-size: 0.55rem;
-            color: #0f2942;
-            line-height: 1.05;
-            font-weight: 700;
-        }
-
-        /* Pions des équipes */
-        .tokens-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5px;
-            justify-content: center;
-            margin-top: 1px;
-        }
-        .token {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            border: 1px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.45), 0 0 5px rgba(255,255,255,0.35);
-            font-size: 7px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        .token-1 { background: #ef4444; }
-        .token-2 { background: #3b82f6; }
-        .token-3 { background: #10b981; }
-        .token-4 { background: #f59e0b; }
-        .token-5 { background: #8b5cf6; }
-        .token-6 { background: #ec4899; }
-
-        /* Panneau central des règles et infos */
-        .center-board-panel {
-            grid-column: 3 / 8;
-            grid-row: 3 / 8;
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 90, 0.94));
-            border: 2px solid #a78bfa;
-            border-radius: 16px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 0 22px rgba(167, 139, 250, 0.38), 0 8px 15px rgba(2, 6, 23, 0.35);
-            z-index: 10;
-        }
-        .center-board-panel h3 { margin: 0 0 5px 0; color: #fde68a; font-size: 0.95rem; letter-spacing: 0.04em; }
-        .center-board-panel p { font-size: 0.68rem; color: #dbeafe; margin: 3px 0; line-height: 1.2; }
-
-        /* Tableau de bord des équipes sous le plateau */
-        .teams-control-panel {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 15px;
-            padding-top: 12px;
-            border-top: 1px solid #e2e8f0;
-        }
-        .team-pill {
-            background: rgba(15, 23, 42, 0.08);
-            border: 1px solid #cbd5e1;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-
-        @media (max-width: 1100px) {
-            .workspace-grid { grid-template-columns: 1fr; }
-            .board-grid { grid-template-rows: repeat(9, minmax(58px, 68px)); }
-        }
-
-        @media (max-width: 620px) {
-            body { padding: 8px; }
-            .card { padding: 12px; }
-            .board-container { padding: 8px; border-width: 3px; }
-            .board-grid { gap: 3px; grid-template-rows: repeat(9, minmax(46px, 58px)); }
-            .case-plateau { padding: 2px; font-size: 0.55rem; }
-            .case-plateau .math-info { font-size: 0.43rem; }
-            .case-plateau .num { font-size: 0.6rem; }
-            .center-board-panel { padding: 6px; }
-            .center-board-panel h3 { font-size: 0.7rem; }
-            .center-board-panel p { font-size: 0.5rem; }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jeu de l'Oie Mathématique pour les classes de collège">
+  <title>Jeu de l'Oie Mathématique</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <div id="notification-banner"></div>
-
-    <!-- Écran de Connexion -->
-    <div id="login-screen">
-        <h2>🔒 Espace Professeur</h2>
-        <p style="font-size: 0.9rem; color: #64748b;">Accès sécurisé pour l'équipe de mathématiques</p>
-        <input type="password" id="password-input" placeholder="Mot de passe professeur..." onkeypress="if(event.key === 'Enter') verifierLogin()">
-        <button onclick="verifierLogin()" style="width: 100%;">Se connecter</button>
-    </div>
-
-    <!-- Application Principale -->
-    <div id="app-container">
-        <header>
-            <h1>🏆 Le Grand Jeu de l'Oie Mathématique - Collège</h1>
-            <div>
-                <span class="user-info">Connecté : <strong>Professeur</strong></span>
-                <button onclick="deconnexion()" style="background: var(--danger); margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Déconnexion</button>
-            </div>
-        </header>
-
-        <div class="workspace-grid">
-            <!-- COLONNE GAUCHE : LE PLATEAU DE JEU VISIBLE EN PERMANENCE -->
-            <div class="card" style="margin-bottom:0;">
-                <h2>🏅 Plateau du Jeu de l'Oie (72 Cases & Figures Historiques)</h2>
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: 0; margin-bottom: 12px;">Parcours spirale vers le Palais final (Case 71).</p>
-                
-                <div class="board-container">
-                    <div class="board-grid" id="board-grid">
-                        <!-- Généré dynamiquement en JS -->
-                    </div>
-                </div>
-
-                <!-- Contrôles des équipes -->
-                <div class="teams-control-panel" id="teams-control-panel">
-                    <!-- Généré dynamiquement en JS -->
-                </div>
-            </div>
-
-            <!-- COLONNE DROITE : PARAMÈTRES, QUESTIONS ET TIRAGE AU SORT -->
-            <div>
-                <div class="card">
-                    <h2>1. Paramètres de la séance</h2>
-                    <div class="config-row">
-                        <div class="config-group">
-                            <label>Classe :</label>
-                            <select id="select-classe">
-                                <option value="6A">6ème A (Collège Jeu de Mail)</option>
-                                <option value="6B">6ème B</option>
-                                <option value="6C">6ème C</option>
-                                <option value="6D">6ème D</option>
-                                <option value="6E">6ème E</option>
-                                <option value="6F">6ème F</option>
-                            </select>
-                        </div>
-                        <div class="config-group">
-                            <label>Série :</label>
-                            <select id="select-seance">
-                                <option value="seance_10">Calcul mental - Série 10</option>
-                                <option value="seance_11">Calcul mental - Série 11</option>
-                            </select>
-                        </div>
-                        <button class="btn-success" onclick="chargerPartie()" style="padding: 9px 12px;">Charger</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>2. Déroulement de la manche</h2>
-                    <div class="question-box">
-                        <div class="question-meta">
-                            <span id="q-counter">Question 1 sur 5</span>
-                            <span id="q-time-target">Conseil : 45 s</span>
-                        </div>
-                        <div class="question-title" id="question-text">Cliquez sur "Charger" pour initialiser.</div>
-                    </div>
-
-                    <div class="timer-container">
-                        <div class="timer-display" id="timer-display">45 s</div>
-                        <button onclick="lancerChrono()">Chrono ⏱️</button>
-                        <button class="btn-accent" onclick="afficherCorrection()">Correction 💡</button>
-                    </div>
-
-                    <div class="correction-box" id="correction-box">
-                        <strong>Correction : </strong><span id="correction-text">...</span>
-                    </div>
-
-                    <div class="nav-buttons">
-                        <button onclick="changerQuestion(-1)">⬅️ Précédente</button>
-                        <button onclick="changerQuestion(1)">Suivante ➡️</button>
-                    </div>
-                </div>
-
-                <div class="student-draw-box card" style="margin-bottom:0;">
-                    <h2>3. Désignation de l'élève</h2>
-                    <button onclick="tirerEleve()" style="background: #9333ea; width: 100%; padding: 10px; font-size: 1rem; margin-top: 8px;">🎲 Tirer un élève au hasard</button>
-                    <div class="student-result" id="selected-student">Prêt pour le tirage...</div>
-                </div>
-            </div>
+  <main id="login-screen" class="login">
+    <section class="login-card">
+      <div class="logo" aria-hidden="true">🎲</div>
+      <h1>Jeu de l’Oie Mathématique</h1>
+      <p>Un espace de classe pour faire progresser les équipes grâce au calcul mental.</p>
+      <form id="login-form">
+        <div class="field">
+          <label for="password">Mot de passe professeur</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Entrez le mot de passe" required>
         </div>
-    </div>
+        <button class="btn full" type="submit">Entrer dans la séance</button>
+      </form>
+    </section>
+  </main>
 
-    <script src="script.js"></script>
+  <main id="app" class="app hidden">
+    <header class="topbar">
+      <div><h1>🏆 Le Grand Jeu de l’Oie Mathématique</h1><small>Collège · plateau de 72 cases · animation de classe</small></div>
+      <div class="topbar-actions"><span>👩‍🏫 Professeur</span><button id="logout" class="btn" type="button">Déconnexion</button></div>
+    </header>
+
+    <div class="layout">
+      <section class="card board-card">
+        <h2>Le parcours des mathématiciens</h2>
+        <p class="subtitle">Une spirale de 72 cases, du départ au Palais des Mathématiques.</p>
+        <div class="board-shell"><div id="board" class="board" aria-label="Plateau de jeu en spirale"></div></div>
+        <div class="legend" aria-label="Légende du plateau"><span>🔵 Départ</span><span>🟡 Arrivée</span><span>🟢 Bonus / pont</span><span>🔴 Piège</span><span>🟣 Pause</span></div>
+        <div id="team-dashboard" class="team-dashboard" aria-label="Tableau de bord des équipes"></div>
+      </section>
+
+      <aside class="controls">
+        <section class="card">
+          <h2>1. Préparer la séance</h2>
+          <div class="config-grid">
+            <div class="field"><label for="class-select">Classe</label><select id="class-select"><option>6ème A</option><option>6ème B</option><option>6ème C</option><option>6ème D</option></select></div>
+            <div class="field"><label for="series-select">Série de calcul mental</label><select id="series-select"><option>Série 1</option><option>Série 2</option><option>Série 3</option><option>Série 4</option><option>Série 5</option><option>Série 6</option><option>Série 7</option><option>Série 8</option><option>Série 9</option><option selected>Série 10</option><option>Série 11</option></select></div>
+            <button id="load-session" class="btn green" type="button">Charger</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2. Question en cours</h2>
+          <div class="question"><div class="question-meta"><span id="question-counter">Question 1 / 5</span><span id="question-time">Temps conseillé : 45 s</span></div><h3 id="question-text">La question va apparaître ici.</h3></div>
+          <div class="timer"><strong id="timer-display" class="timer-display">45 s</strong><button id="start-timer" class="btn blue" type="button">⏱️ Lancer</button><button id="show-correction" class="btn gold" type="button">💡 Correction</button></div>
+          <div id="correction" class="correction hidden"><strong>Correction : </strong><span id="correction-text"></span></div>
+          <nav class="nav"><button id="previous" class="btn" type="button">← Précédente</button><button id="next" class="btn" type="button">Suivante →</button></nav>
+        </section>
+
+        <section class="card">
+          <h2>3. Tirage au sort de la classe</h2>
+          <p class="subtitle">Le nom est tiré dans la classe sélectionnée.</p>
+          <button id="draw-student" class="btn full" type="button">🎲 Désigner un élève</button>
+          <div id="draw-result" class="draw-result" aria-live="polite">Prêt pour le tirage…</div>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <script src="app.js"></script>
 </body>
 </html>
