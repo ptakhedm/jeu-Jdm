@@ -70,7 +70,7 @@
         <section class="play-card class-card">
           <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">MAÎTRE DU JEU</p><h2>Classes et pions</h2></div></div>
           <p class="class-help">Chaque classe possède son propre pion. Cette session affiche uniquement vos classes.</p>
-          <label for="class-select">Classe active</label><select id="class-select"><option>6ème 1</option><option>6ème 2</option><option>6ème 3</option><option>6ème 4</option><option>6ème 5</option></select>
+          <select id="class-select" class="is-hidden" aria-hidden="true"></select>
           <div id="student-result" class="student-result">Le tirage se fera automatiquement.</div>
         </section>
       </aside>
@@ -86,10 +86,11 @@
       <div id="question-phase"><div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div></div>
       <div id="draw-phase" class="draw-phase is-hidden"><div class="draw-spinner">🎲</div><strong>Tirage au sort de l’élève…</strong><span id="draw-animation-name">Préparation du tirage</span></div>
       <div id="student-phase" class="student-phase is-hidden"><span>Élève désigné</span><strong id="stage-student-name"></strong></div>
-      <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span></div>
+      <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span><button id="close-correction" class="game-button secondary">Fermer la correction et déplacer le pion</button></div>
       <div class="stage-actions"><button id="correct-answer" class="game-button primary is-hidden">✅ Réponse correcte (+2)</button><button id="wrong-answer" class="game-button danger is-hidden">❌ Réponse incorrecte (−1)</button><button id="show-correction" class="game-button secondary is-hidden">💡 Voir la correction</button><button id="next-question" class="game-button primary is-hidden">Question suivante →</button></div>
     </div>
   </section>
   <script src="app.js"></script>
+  <script src="flow-fixes.js"></script>
 </body>
 </html>
