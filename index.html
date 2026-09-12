@@ -45,7 +45,7 @@
   <main id="game-screen" class="game-screen is-hidden">
     <header class="game-header">
       <div class="brand"><span class="brand-icon">🪿</span><div><p class="eyebrow">LA GRANDE COURSE</p><h1>Jeu de l’Oie Mathématique</h1><small id="teacher-session"></small></div></div>
-      <div class="header-actions"><button id="question-open" class="game-button gold">🎯 Question grand écran</button><button id="logout" class="icon-button" title="Déconnexion">↪</button></div>
+      <div class="header-actions"><button id="logout" class="icon-button" title="Déconnexion">↪</button></div>
     </header>
 
     <section class="game-layout">
@@ -58,21 +58,20 @@
       <aside class="side-panel">
         <section class="play-card current-card">
           <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2></div></div>
-          <div class="dice-area"><div id="dice" class="dice">?</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le défi</button></div>
-          <p id="move-message" class="move-message">Une bonne réponse avance de 2 cases ; une réponse fausse recule d’1 case.</p>
+          <div class="dice-area"><div id="dice" class="dice">🎲</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le jeu</button></div>
+          <p id="move-message" class="move-message">La question, le chrono et le tirage se lancent automatiquement.</p>
         </section>
 
         <section class="play-card question-card">
           <div class="card-heading"><span class="step">02</span><div><p class="eyebrow">DÉFI MATHÉMATIQUE</p><h2>La question du tour</h2></div></div>
-          <p id="mini-question">Cliquez sur « Question grand écran » pour afficher le défi à toute la classe.</p>
-          <button id="question-open-2" class="game-button secondary full-button">Afficher la question</button>
+          <p id="mini-question">Cliquez sur « Lancer le jeu » : la question s’affiche en grand pour toute la classe.</p>
         </section>
 
         <section class="play-card class-card">
           <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">MAÎTRE DU JEU</p><h2>Classes et pions</h2></div></div>
           <p class="class-help">Chaque classe possède son propre pion. Cette session affiche uniquement vos classes.</p>
-          <label for="class-select">Élève à tirer</label><select id="class-select"><option>6ème 1</option><option>6ème 2</option><option>6ème 3</option><option>6ème 4</option><option>6ème 5</option></select>
-          <button id="draw-student" class="game-button purple full-button">🎲 Tirer un élève</button><div id="student-result" class="student-result">Prêt !</div>
+          <label for="class-select">Classe active</label><select id="class-select"><option>6ème 1</option><option>6ème 2</option><option>6ème 3</option><option>6ème 4</option><option>6ème 5</option></select>
+          <div id="student-result" class="student-result">Le tirage se fera automatiquement.</div>
         </section>
       </aside>
     </section>
@@ -84,9 +83,11 @@
       <div class="stage-top"><span class="stage-badge">DÉFI DU TOUR</span><span id="stage-team">6ème 1</span></div>
       <p id="stage-counter" class="stage-counter">Question 1 / 5</p>
       <h2 id="stage-question">Question</h2>
-      <div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div>
+      <div id="question-phase"><div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div></div>
+      <div id="draw-phase" class="draw-phase is-hidden"><div class="draw-spinner">🎲</div><strong>Tirage au sort de l’élève…</strong><span id="draw-animation-name">Préparation du tirage</span></div>
+      <div id="student-phase" class="student-phase is-hidden"><span>Élève désigné</span><strong id="stage-student-name"></strong></div>
       <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span></div>
-      <div class="stage-actions"><button id="timer-start" class="game-button gold">▶ Lancer le chrono</button><button id="show-correction" class="game-button secondary">💡 Voir la correction</button><button id="correct-answer" class="game-button primary">✅ Bonne réponse (+2)</button><button id="wrong-answer" class="game-button danger">❌ Réponse fausse (−1)</button><button id="next-question" class="game-button primary">Question suivante →</button></div>
+      <div class="stage-actions"><button id="correct-answer" class="game-button primary is-hidden">✅ Réponse correcte (+2)</button><button id="wrong-answer" class="game-button danger is-hidden">❌ Réponse incorrecte (−1)</button><button id="show-correction" class="game-button secondary is-hidden">💡 Voir la correction</button><button id="next-question" class="game-button primary is-hidden">Question suivante →</button></div>
     </div>
   </section>
   <script src="app.js"></script>
