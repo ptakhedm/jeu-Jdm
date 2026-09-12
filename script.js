@@ -1,11 +1,11 @@
 // script.js
 const PASSWORD_PROF = "maths2026";
 
-// Système de notification utilisateur pour éviter les écrans figés
 function afficherNotification(message, type = "info") {
     const banner = document.getElementById('notification-banner');
+    if (!banner) return;
     banner.innerText = message;
-    banner.className = ""; // Reset classes
+    banner.className = "";
     if (type === "error") banner.classList.add("banner-error");
     else if (type === "success") banner.classList.add("banner-success");
     else banner.classList.add("banner-info");
@@ -45,7 +45,7 @@ function deconnexion() {
     afficherNotification("Déconnexion effectuée.", "info");
 }
 
-// Banques de questions issues des diaporamas
+// Banques de questions
 const questionsDatabase = {
     "seance_10": [
         { id: 1, texte: "Combien de minutes représentent les trois quarts de 3 heures ?", temps: 45, correction: "3 x 45 minutes = 135 minutes = 2h15mn" },
@@ -76,7 +76,75 @@ const elevesParClasse = {
 let currentSeance = "seance_10";
 let currentIndex = 0;
 let timerInterval = null;
-const NB_CASES = 15;
+
+// Association des mathématiciens / notions aux cases du Jeu de l'Oie (de 0 à 63)
+const casesMaths = {
+    0: "Départ",
+    1: "Al-Khawarizmi (Algèbre)",
+    2: "Euclide (Nombres premiers)",
+    3: "Pythagore (Théorème)",
+    4: "Descartes (Repère)",
+    5: "Évariste Galois (Groupes)",
+    6: "Pont ➔ Case 12",
+    7: "Riemann (Hypothèse)",
+    8: "Fibonacci (Suite)",
+    9: "Al-Karaji",
+    10: "Thalès",
+    11: "Hypatie",
+    12: "Fibonacci (Lapins)",
+    13: "Fermat (Dernier Th.)",
+    14: "Leibniz (Calcul)",
+    15: "Pascal (Triangle)",
+    16: "Desargues",
+    17: "Gauss (Prince)",
+    18: "Euler (Identité)",
+    19: "Hôtel (Pause)",
+    20: "Turing (Machine)",
+    21: "Boole (Logique)",
+    22: "Cantor (Infinis)",
+    23: "Lagrange",
+    24: "Poisson",
+    25: "Laplace",
+    26: "Fourier",
+    27: "Cubic (Cardan)",
+    28: "Archimède (Parfait)",
+    29: "Eratosthène (Crible)",
+    30: "Diophante",
+    31: "Puits d'Euler",
+    32: "Napier (Logarithmes)",
+    33: "Brahmagupta",
+    34: "Bhaskara",
+    35: "Aryabhata",
+    36: "Zu Chongzhi ($\pi$)",
+    37: "Hero d'Alexandrie",
+    38: "Menelaus",
+    39: "Ptolémée",
+    40: "Apollonius",
+    41: "Eudoxe",
+    42: "Labyrinthe ➔ Case 30",
+    43: "Zenon (Paradoxe)",
+    44: "Ératosthène (Terre)",
+    45: "Thétanos",
+    46: "Hippias",
+    47: "Anaxagore",
+    48: "Thalès (Pyramide)",
+    49: "Pythagore (Irrationnels)",
+    50: "Platon (Solides)",
+    51: "Aristote",
+    52: "Prison (Blocage)",
+    53: "Bachet",
+    54: "Roberval",
+    55: "Mersenne (Primes)",
+    56: "Torricelli",
+    57: "Viviani",
+    58: "Tête de Mort ➔ 0",
+    59: "Cavalieri",
+    60: "Descartes (Géométrie)",
+    61: "Fermat",
+    62: "Newton (Fluxions)",
+    63: "Palais des Mathématiques"
+};
+
 let positionsEquipes = {
     "Équipe 1": 0,
     "Équipe 2": 0,
@@ -86,50 +154,117 @@ let positionsEquipes = {
     "Équipe 6": 0
 };
 
+// Disposition en grille 9x7 (63 cases + le panneau central)
+// On définit l'ordre des cases de 0 à 63 pour former un circuit en spirale autour du centre.
 function initBoard() {
-    const container = document.getElementById('board-container');
-    if (!container) return;
-    container.innerHTML = '';
+    const grid = document.getElementById('board-grid');
+    const controls = document.getElementById('teams-control-panel');
+    if (!grid || !controls) return;
+    
+    grid.innerHTML = '';
+    controls.innerHTML = '';
+
+    // Définition de la grille 9 colonnes x 7 lignes (63 cases numérotées de 0 à 63)
+    // Coordonnées (ligne, colonne) en index 0-based pour placer les cases en spirale externe
+    let mapCoord = {};
+    let currentNum = 0;
+    
+    // Ligne 0 (haut de gauche à droite : 0 à 8)
+    for(let c=0; c<9; c++) mapCoord[currentNum++] = {r: 0, c: c};
+    // Colonne 8 (droite de haut en bas : 9 à 14)
+    for(let r=1; r<7; r++) mapCoord[currentNum++] = {r: r, c: 8};
+    // Ligne 6 (bas de droite à gauche : 15 à 23)
+    for(let c=7; c>=0; c--) mapCoord[currentNum++] = {r: 6, c: c};
+    // Colonne 0 (gauche de bas en haut : 24 à 28)
+    for(let r=5; r>=1; r--) mapCoord[currentNum++] = {r: r, c: 0};
+    
+    // Second anneau intérieur
+    for(let c=1; c<8; c++) mapCoord[currentNum++] = {r: 1, c: c};
+    for(let r=2; r<6; r++) mapCoord[currentNum++] = {r: r, c: 7};
+    for(let c=6; c>=1; c--) mapCoord[currentNum++] = {r: 5, c: c};
+    for(let r=4; r>=2; r--) mapCoord[currentNum++] = {r: r, c: 1};
+    
+    // Troisième anneau / centre
+    for(let c=2; c<7; c++) mapCoord[currentNum++] = {r: 2, c: c};
+    mapCoord[currentNum++] = {r: 3, c: 6};
+    mapCoord[currentNum++] = {r: 4, c: 6};
+    for(let c=5; c>=2; c--) mapCoord[currentNum++] = {r: 4, c: c};
+    mapCoord[currentNum++] = {r: 3, c: 2};
+    // Fin vers la case 63 au centre
+    mapCoord[currentNum++] = {r: 3, c: 3};
+    mapCoord[currentNum++] = {r: 3, c: 4};
+    mapCoord[currentNum++] = {r: 3, c: 5}; // Case 63
+
+    // Création des 63 cases dans la grille CSS grid (9x7)
+    let cellsHTML = '';
+    for (let i = 0; i <= 63; i++) {
+        let coord = mapCoord[i] || {r: 0, c: 0};
+        let labelInfo = casesMaths[i] || "";
+        
+        // Recherche des équipes sur cette case
+        let tokensHTML = '';
+        for (let [team, pos] of Object.entries(positionsEquipes)) {
+            if (pos === i) {
+                let teamNum = team.replace("Équipe ", "");
+                tokensHTML += `<div class="token token-${teamNum}" title="${team}">E${teamNum}</div>`;
+            }
+        }
+
+        cellsHTML += `<div class="case-plateau" style="grid-row: ${coord.r + 1}; grid-column: ${coord.c + 1};">
+            <span class="num">${i}</span>
+            <span class="math-info">${labelInfo}</span>
+            <div class="tokens-container">${tokensHTML}</div>
+        </div>`;
+    }
+
+    // Ajout du panneau central des règles au milieu de la grille
+    cellsHTML += `<div class="center-board-panel">
+        <h3>JEU DE L'OIE MATHÉMATIQUE</h3>
+        <p>Objectif : Atteindre la case 63 (Palais des Mathématiques).</p>
+        <p>🎲 +1 ou +2 cases par bonne réponse.</p>
+        <p>⚠️ Pièges : Puits (31), Labyrinthe (42), Tête de mort (58).</p>
+    </div>`;
+
+    grid.innerHTML = cellsHTML;
+
+    // Génération des boutons de contrôle des équipes sous le plateau
+    let teamColorClasses = { "Équipe 1": "token-1", "Équipe 2": "token-2", "Équipe 3": "token-3", "Équipe 4": "token-4", "Équipe 5": "token-5", "Équipe 6": "token-6" };
     
     for (let [team, pos] of Object.entries(positionsEquipes)) {
-        let trackHTML = `<div class="team-track">
-            <div class="team-track-header">
-                <span>${team}</span>
-                <span>Case : ${pos} / ${NB_CASES}</span>
+        let pillClass = teamColorClasses[team] || "";
+        controls.innerHTML += `
+            <div class="team-pill">
+                <div class="token ${pillClass}" style="width:18px;height:18px;font-size:10px;">•</div>
+                <span>${team} (Case ${pos})</span>
+                <div style="display:flex; gap:3px; margin-left:5px;">
+                    <button class="btn-success" style="padding:2px 6px; font-size:0.75rem;" onclick="avancerEquipe('${team}', 1)">+1</button>
+                    <button class="btn-accent" style="padding:2px 6px; font-size:0.75rem;" onclick="avancerEquipe('${team}', 2)">+2</button>
+                    <button style="background:var(--danger); padding:2px 6px; font-size:0.75rem;" onclick="avancerEquipe('${team}', -1)">-1</button>
+                </div>
             </div>
-            <div class="track-grid" id="track-${team}">`;
-        
-        for (let i = 0; i <= NB_CASES; i++) {
-            let activeClass = (i === pos) ? 'active' : '';
-            trackHTML += `<div class="case ${activeClass}">${i}</div>`;
-        }
-        
-        trackHTML += `</div>
-            <div class="team-controls">
-                <button class="btn-success" onclick="avancerEquipe('${team}', 1)">+1 Case</button>
-                <button class="btn-accent" onclick="avancerEquipe('${team}', 2)">+2 Cases</button>
-                <button style="background:var(--danger)" onclick="avancerEquipe('${team}', -1)">-1</button>
-            </div>
-        </div>`;
-        
-        container.innerHTML += trackHTML;
+        `;
     }
 }
 
 function avancerEquipe(team, delta) {
     let anciennePos = positionsEquipes[team];
-    positionsEquipes[team] = Math.min(NB_CASES, Math.max(0, positionsEquipes[team] + delta));
-    initBoard();
-    if (positionsEquipes[team] === NB_CASES && anciennePos !== NB_CASES) {
-        afficherNotification(`🎉 ${team} a atteint la fin du plateau !`, "success");
-    }
-}
+    let nouvellePos = anciennePos + delta;
+    
+    // Règles spéciales du jeu de l'oie
+    if (nouvellePos === 6) { nouvellePos = 12; afficherNotification(`${team} passe du Pont à la case 12 !`, "success"); }
+    else if (nouvellePos === 42) { nouvellePos = 30; afficherNotification(`${team} tombe dans le Labyrinthe et recule à la case 30 !`, "error"); }
+    else if (nouvellePos === 58) { nouvellePos = 0; afficherNotification(`${team} tombe sur la Tête de mort et retourne à la case départ !`, "error"); }
 
-function reinitialiserScores() {
-    if(confirm("Voulez-vous replacer toutes les équipes au départ (Case 0) ?")) {
-        for (let team in positionsEquipes) positionsEquipes[team] = 0;
-        initBoard();
-        afficherNotification("Plateau réinitialisé.", "info");
+    if (nouvellePos > 63) {
+        // Règle du rebond si dépassement de 63
+        nouvellePos = 63 - (nouvellePos - 63);
+    }
+    
+    positionsEquipes[team] = Math.max(0, nouvellePos);
+    initBoard();
+
+    if (positionsEquipes[team] === 63 && anciennePos !== 63) {
+        afficherNotification(`🎉 ${team} a gagné la partie en atteignant le Palais des Mathématiques !`, "success");
     }
 }
 
@@ -144,10 +279,7 @@ function chargerPartie() {
 
 function afficherQuestionCourante() {
     const questions = questionsDatabase[currentSeance];
-    if (!questions || !questions[currentIndex]) {
-        afficherNotification("Erreur lors du chargement de la question.", "error");
-        return;
-    }
+    if (!questions || !questions[currentIndex]) return;
     const q = questions[currentIndex];
     
     document.getElementById('q-counter').innerText = `Question ${currentIndex + 1} sur ${questions.length}`;
@@ -163,16 +295,8 @@ function afficherQuestionCourante() {
 function changerQuestion(dir) {
     const questions = questionsDatabase[currentSeance];
     currentIndex += dir;
-    if (currentIndex < 0) {
-        currentIndex = 0;
-        afficherNotification("Vous êtes déjà à la première question.", "info");
-        return;
-    }
-    if (currentIndex >= questions.length) {
-        currentIndex = questions.length - 1;
-        afficherNotification("Vous êtes à la dernière question de la série.", "info");
-        return;
-    }
+    if (currentIndex < 0) { currentIndex = 0; afficherNotification("Première question.", "info"); return; }
+    if (currentIndex >= questions.length) { currentIndex = questions.length - 1; afficherNotification("Dernière question de la série.", "info"); return; }
     afficherQuestionCourante();
 }
 
@@ -202,10 +326,7 @@ function tirerEleve() {
     const classe = classeSelect ? classeSelect.value : "6A";
     const liste = elevesParClasse[classe];
     
-    if (!liste || liste.length === 0) {
-        afficherNotification("Aucun élève trouvé pour cette classe.", "error");
-        return;
-    }
+    if (!liste) return;
 
     const resultatDiv = document.getElementById('selected-student');
     let compteur = 0;
