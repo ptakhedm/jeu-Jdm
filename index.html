@@ -62,11 +62,6 @@
           <p id="move-message" class="move-message">La question, le chrono et le tirage se lancent automatiquement.</p>
         </section>
 
-        <section class="play-card question-card">
-          <div class="card-heading"><span class="step">02</span><div><p class="eyebrow">DÉFI MATHÉMATIQUE</p><h2>La question du tour</h2></div></div>
-          <p id="mini-question">Cliquez sur « Lancer le jeu » : la question s’affiche en grand pour toute la classe.</p>
-        </section>
-
         <section class="play-card class-card">
           <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">CLASSE ACTIVE</p><h2>Votre pion</h2></div></div>
           <div class="active-class-display"><span id="active-class-pawn" class="active-class-pawn">1</span><div><strong id="active-class-name">6ème 1</strong><small>Classe actuellement en jeu</small></div></div>
@@ -78,15 +73,14 @@
 
   <section id="question-modal" class="question-modal is-hidden" aria-modal="true" role="dialog">
     <div class="question-stage">
-      <button id="question-close" class="modal-close" aria-label="Fermer">×</button>
       <div class="stage-top"><span class="stage-badge">DÉFI DU TOUR</span><span id="stage-team">6ème 1</span></div>
       <p id="stage-counter" class="stage-counter">Question 1 / 5</p>
       <h2 id="stage-question">Question</h2>
       <div id="question-phase"><div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div></div>
       <div id="draw-phase" class="draw-phase is-hidden"><div class="draw-spinner">🎲</div><strong>Tirage au sort de l’élève…</strong><span id="draw-animation-name">Préparation du tirage</span></div>
       <div id="student-phase" class="student-phase is-hidden"><span>Élève désigné</span><strong id="stage-student-name"></strong></div>
-      <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span><button id="close-correction" class="game-button secondary">Fermer la correction et déplacer le pion</button></div>
-      <div class="stage-actions"><button id="correct-answer" class="game-button primary is-hidden">✅ Réponse correcte (+2)</button><button id="wrong-answer" class="game-button danger is-hidden">❌ Réponse incorrecte (−1)</button><button id="show-correction" class="game-button secondary is-hidden">💡 Voir la correction</button><button id="next-question" class="game-button primary is-hidden">Question suivante →</button></div>
+      <div id="stage-correction" class="stage-correction is-hidden"><strong>Correction</strong><span id="correction-text"></span><button id="close-correction" class="game-button secondary is-hidden">Fermer la correction et déplacer le pion</button></div>
+      <div class="stage-actions"><button id="correct-answer" class="game-button primary is-hidden">✅ Réponse correcte (+2)</button><button id="wrong-answer" class="game-button danger is-hidden">❌ Réponse incorrecte (−1)</button></div>
     </div>
   </section>
   <script src="app.js"></script>

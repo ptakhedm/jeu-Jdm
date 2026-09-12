@@ -27,7 +27,7 @@
   });
 
   function setAnswerButtons(visible) {
-    ["correct-answer", "wrong-answer", "show-correction"].forEach(id => $(id).classList.toggle("is-hidden", !visible));
+    ["correct-answer", "wrong-answer"].forEach(id => $(id).classList.toggle("is-hidden", !visible));
   }
 
   function resetQuestionView() {
@@ -38,7 +38,6 @@
     $("stage-correction").classList.add("is-hidden");
     $("close-correction").classList.add("is-hidden");
     setAnswerButtons(false);
-    $("next-question").classList.add("is-hidden");
     $("correct-answer").disabled = false;
     $("wrong-answer").disabled = false;
   }
@@ -86,6 +85,7 @@
     state.pendingAnswer = correct;
     $("correct-answer").disabled = true;
     $("wrong-answer").disabled = true;
+    setAnswerButtons(false);
     $("stage-correction").classList.remove("is-hidden");
     $("close-correction").classList.remove("is-hidden");
     $("timer-label").textContent = correct
