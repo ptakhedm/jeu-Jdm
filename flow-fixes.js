@@ -36,6 +36,14 @@
     setAnswerButtons(false);
     $("correct-answer").disabled = false;
     $("wrong-answer").disabled = false;
+    $("timer-label").textContent = "À toi de réfléchir !";
+  }
+
+  function highlightPrimeStop(position) {
+    const cell = document.querySelectorAll("#game-board .cell")[position];
+    if (!cell) return;
+    cell.classList.add("prime-stop");
+    setTimeout(() => cell.classList.remove("prime-stop"), 1400);
   }
 
   function startDebugTimer() {
@@ -61,6 +69,17 @@
   const freshLaunchButton = launchButton.cloneNode(true);
   launchButton.replaceWith(freshLaunchButton);
   freshLaunchButton.addEventListener("click", () => {
+    if (state.finished) {
+      clearInterval(state.timer);
+      state.finished = false;
+      state.challengeActive = false;
+      $("question-modal").classList.add("is-hidden");
+      $("game-screen").classList.add("is-hidden");
+      $("class-selection-screen").classList.add("is-hidden");
+      $("login-screen").classList.remove("is-hidden");
+      freshLaunchButton.textContent = "🎲 Lancer le jeu";
+      return;
+    }
     if (state.challengeActive || state.moving) return;
     if (state.waitingNext) {
       state.question = (state.question + 1) % questionSets[state.series].length;
@@ -106,7 +125,9 @@
     await moveClass(name, delta);
     const landedOnPrime = !correct && isPrime(state.classes[name].pos);
     if (landedOnPrime) {
-      notify("⭐ Case première après le recul ! Bonus de 2 cases !");
+      highlightPrimeStop(state.classes[name].pos);
+      notify("⏸️ Arrêt sur une case première ! Bonus de 2 cases !");
+      await new Promise(resolve => setTimeout(resolve, 1200));
       await moveClass(name, 2);
     }
     const lastQuestion = state.question === questionSets[state.series].length - 1;
@@ -114,8 +135,9 @@
       state.classes[name].rounds += 1;
       renderClasses();
       state.waitingNext = false;
-      freshLaunchButton.textContent = "🏁 Partie terminée";
-      freshLaunchButton.disabled = true;
+      freshLaunchButton.textContent = "↩️ Revenir à la connexion";
+      freshLaunchButton.disabled = false;
+      state.finished = true;
       $("move-message").textContent = `${name} a terminé sa série : tour ${state.classes[name].rounds}.`;
       notify("🏁 Les 5 questions sont terminées !");
     } else {
