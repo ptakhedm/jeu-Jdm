@@ -2,125 +2,416 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeu de Calcul Mental - Collège</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 15px 20px; border-radius: 8px; }
-        .container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .teams-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .team-box { background: #ecf0f1; padding: 10px; border-radius: 6px; text-align: center; }
-        .team-box h3 { margin: 0 0 5px 0; font-size: 1rem; color: #2c3e50; }
-        .score { font-size: 1.5rem; font-weight: bold; color: #2980b9; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; }
-        button:hover { background: #2980b9; }
-        .timer { font-size: 2rem; font-weight: bold; text-align: center; color: #e74c3c; margin: 15px 0; }
-        .modalite { background: #e8f8f5; border-left: 5px solid #2ecc71; padding: 15px; margin-top: 15px; }
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 { margin: 0; font-size: 1.8rem; }
+        .user-info { font-size: 0.95rem; background: rgba(255,255,255,0.15); padding: 8px 15px; border-radius: 20px; }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 { margin-top: 0; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+
+        /* Configuration et Paramètres */
+        .config-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .config-group { display: flex; flex-direction: column; gap: 5px; }
+        select, button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 1rem;
+            outline: none;
+        }
+        select { background: white; cursor: pointer; }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover { background: var(--primary-dark); }
+        button:active { transform: scale(0.98); }
+        button.btn-accent { background: var(--accent); }
+        button.btn-accent:hover { background: #d97706; }
+        button.btn-success { background: var(--secondary); }
+        button.btn-success:hover { background: #059669; }
+
+        /* Zone de Jeu / Question */
+        .question-box {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .question-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: #64748b; margin-bottom: 8px; }
+        .question-title { font-size: 1.25rem; font-weight: bold; color: #065f46; margin-bottom: 15px; }
+        
+        .timer-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--danger);
+            background: #ffeeec;
+            padding: 5px 20px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .correction-box {
+            background: #fffbeb;
+            border-left: 5px solid var(--accent);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+            display: none;
+        }
+
+        /* Plateau de Jeu / Équipes */
+        .teams-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .team-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .team-card:hover { transform: translateY(-2px); border-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .team-name { font-weight: bold; font-size: 1.1rem; color: #334155; }
+        .team-score { font-size: 2rem; font-weight: bold; color: var(--primary); margin: 8px 0; }
+        .score-btns { display: flex; justify-content: center; gap: 8px; }
+        .score-btns button { padding: 5px 12px; font-size: 0.9rem; }
+
+        /* Tirage au sort élève */
+        .student-draw-box {
+            background: #faf5ff;
+            border: 2px solid #e9d5ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .student-result {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #7e22ce;
+            margin-top: 12px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Calcul Mental - 6ème</h1>
-        <div>Connecté en tant que : <span id="user-prof">Professeur</span> | <button onclick="logout()">Déconnexion</button></div>
+        <h1>🏆 Le Grand Jeu de Calcul Mental - 6ème</h1>
+        <div class="user-info">Connecté : <strong>Professeur</strong></div>
     </header>
 
-    <div class="container">
-        <!-- Zone de Jeu Principale -->
+    <div class="main-layout">
+        <!-- Colonne de Gauche : Gestion du Jeu, Questions & Tirage -->
         <div>
+            <!-- Configuration de la partie -->
             <div class="card">
-                <h2>Sélection de la séance et de la classe</h2>
-                <label>Classe : </label>
-                <select id="select-classe" onchange="chargerEleves()">
-                    <option value="6A">6ème A</option>
-                    <option value="6B">6ème B</option>
-                    <option value="6C">6ème C</option>
-                </select>
-                <label style="margin-left: 20px;">Séance : </label>
-                <select id="select-seance">
-                    <option value="seance_10">Séance 10</option>
-                    <option value="seance_11">Séance 11</option>
-                </select>
-            </div>
-
-            <div class="card" id="game-card">
-                <h2>Question en cours</h2>
-                <p id="question-text">Cliquez sur "Démarrer le jeu" pour commencer.</p>
-                <div class="timer" id="timer-display">-- s</div>
-                <button onclick="lancerChrono()">Lancer le Chrono</button>
-                <button onclick="afficherCorrection()" style="background: #e67e22;">Voir la Correction</button>
-                
-                <div class="modalite" id="correction-box" style="display:none;">
-                    <strong>Correction : </strong><span id="correction-text"></span>
+                <h2>1. Paramètres de la séance</h2>
+                <div class="config-row">
+                    <div class="config-group">
+                        <label>Classe engagée :</label>
+                        <select id="select-classe">
+                            <option value="6A">6ème A (Collège Jeu de Mail)</option>
+                            <option value="6B">6ème B</option>
+                            <option value="6C">6ème C</option>
+                            <option value="6D">6ème D</option>
+                            <option value="6E">6ème E</option>
+                            <option value="6F">6ème F</option>
+                        </select>
+                    </div>
+                    <div class="config-group">
+                        <label>Séquence / Questionnaire :</label>
+                        <select id="select-seance" onchange="changerSeance()">
+                            <option value="seance_10">Calcul mental - Série 10</option>
+                            <option value="seance_11">Calcul mental - Série 11</option>
+                        </select>
+                    </div>
+                    <div class="config-group" style="justify-content: flex-end;">
+                        <button class="btn-success" onclick="chargerPartie()">Valider & Charger</button>
+                    </div>
                 </div>
             </div>
 
+            <!-- Question en cours -->
             <div class="card">
-                <h2>Tirage au sort de l'élève</h2>
-                <button onclick="tirerEleve()">Tirer un élève au hasard dans la classe</button>
-                <h3 id="selected-student" style="color: #8e44ad; margin-top: 10px;">Aucun élève tiré</h3>
+                <h2>2. Déroulement de la manche</h2>
+                <div class="question-box">
+                    <div class="question-meta">
+                        <span id="q-counter">Question 1 sur 5</span>
+                        <span id="q-time-target">Temps conseillé : 45 s</span>
+                    </div>
+                    <div class="question-title" id="question-text">Cliquez sur "Valider & Charger" pour initialiser le jeu.</div>
+                </div>
+
+                <div class="timer-container">
+                    <div class="timer-display" id="timer-display">45 s</div>
+                    <button onclick="lancerChrono()">Démarrer le Chrono ⏱️</button>
+                    <button class="btn-accent" onclick="afficherCorrection()">Afficher la Correction 💡</button>
+                </div>
+
+                <div class="correction-box" id="correction-box">
+                    <strong>Correction détaillée : </strong><span id="correction-text">...</span>
+                </div>
+
+                <div class="nav-buttons">
+                    <button onclick="changerQuestion(-1)">⬅️ Question précédente</button>
+                    <button onclick="changerQuestion(1)">Question suivante ➡️</button>
+                </div>
+            </div>
+
+            <!-- Tirage au sort de l'élève -->
+            <div class="student-draw-box">
+                <h2>3. Désignation de l'élève interrogé</h2>
+                <button onclick="tirerEleve()" style="background: #9333ea;">🎲 Tirer un élève au hasard dans la classe</button>
+                <div class="student-result" id="selected-student">Prêt pour le tirage au sort...</div>
             </div>
         </div>
 
-        <!-- Tableau des Scores des 6 Équipes -->
+        <!-- Colonne de Droite : Plateau des 6 Équipes -->
         <div>
             <div class="card">
-                <h2>Scores des Équipes</h2>
-                <div class="teams-grid" id="teams-container">
-                    <!-- Généré dynamiquement pour 6 équipes -->
+                <h2>🏅 Plateau des 6 Équipes</h2>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 0;">Suivi des points en direct pendant l'affrontement entre les classes/groupes.</p>
+                <div class="teams-container" id="teams-grid">
+                    <!-- Généré dynamiquement en JS -->
                 </div>
+                <button onclick="reinitialiserScores()" style="width: 100%; margin-top: 20px; background: #64748b; font-size: 0.9rem;">Réinitialiser les scores</button>
             </div>
         </div>
     </div>
 
 <script>
-    // Simulation des listes d'élèves par classe
-    const elevesParClasse = {
-        "6A": ["Lucas", "Chloé", "Nathan", "Inès", "Thomas", "Manon", "Gabriel", "Sarah"],
-        "6B": ["Hugo", "Jade", "Louis", "Louise", "Jules", "Alice", "Adam", "Lina"],
-        "6C": ["Enzo", "Mila", "Raphaël", "Rose", "Arthur", "Emma", "Noah", "Léa"]
+    // Banques de données réelles extraites de tes PowerPoint (Séries 10 et 11)
+    const questionsDatabase = {
+        "seance_10": [
+            {
+                id: 1,
+                texte: "Combien de minutes représentent les trois quarts de 3 heures ?",
+                temps: 45,
+                correction: "3 x 45 minutes = 135 minutes = 2h15mn"
+            },
+            {
+                id: 2,
+                texte: "262 - ? = 87",
+                temps: 45,
+                correction: "262 - 175 = 87"
+            },
+            {
+                id: 3,
+                texte: "5 élèves se partagent 49 billes équitablement. Combien en restera-t-il qui ne pourront pas être partagées ?",
+                temps: 60,
+                correction: "Ils auront 9 billes chacun et il restera 4 billes (car 5 x 9 = 45)."
+            },
+            {
+                id: 4,
+                texte: "Quelle est la fraction de la figure qui est grisée ? (Figure : losange composé de triangles)",
+                temps: 30,
+                correction: "La fraction correspond à 3/8."
+            },
+            {
+                id: 5,
+                texte: "Prends le nombre 27. Divise-le par 9. Ajoute 18 au résultat. Multiplie ton résultat par le chiffre des dizaines du nombre de départ. Quel est le résultat final ?",
+                temps: 60,
+                correction: "27 / 9 = 3 | 3 + 18 = 21 | Le chiffre des dizaines de 27 est 2 | 21 x 2 = 42."
+            }
+        ],
+        "seance_11": [
+            {
+                id: 1,
+                texte: "9 x 9 - 15 = ?",
+                temps: 45,
+                correction: "9 x 9 = 81, puis 81 - 15 = 66."
+            },
+            {
+                id: 2,
+                texte: "3 jours et 9 heures = …………… heures",
+                temps: 60,
+                correction: "3 x 24 heures + 9 heures = 72 + 9 = 81 heures."
+            },
+            {
+                id: 3,
+                texte: "Je suis un triangle. Mes trois côtés sont de même mesure. Qui suis-je ?",
+                temps: 30,
+                correction: "Je suis un triangle équilatéral."
+            },
+            {
+                id: 4,
+                texte: "Combien de fois y a-t-il le nombre 7 dans 420 ?",
+                temps: 60,
+                correction: "7 x 60 = 420. Il y a donc 60 fois le nombre 7 dans 420."
+            },
+            {
+                id: 5,
+                texte: "Si j’ai 50 euros et que je dépense la moitié de la moitié de mes 50 euros. Combien me reste-t-il ?",
+                temps: 60,
+                correction: "La moitié de 50 est 25, la moitié de 25 est 12,50 €. 50 - 12,50 = 37,50 €."
+            }
+        ]
     };
 
+    // Listes d'élèves fictives pour le tirage au sort (extensibles par classe)
+    const elevesParClasse = {
+        "6A": ["Lucas", "Chloé", "Nathan", "Inès", "Thomas", "Manon", "Gabriel", "Sarah", "Hugo", "Jade"],
+        "6B": ["Louis", "Louise", "Jules", "Alice", "Adam", "Lina", "Enzo", "Mila", "Raphaël", "Rose"],
+        "6C": ["Arthur", "Emma", "Noah", "Léa", "Sacha", "Zoé", "Lucas", "Manon", "Ethan", "Chloé"],
+        "6D": ["Léonie", "Timéo", "Agathe", "Tom", "Louise", "Léon", "Camille", "Nathan", "Juliette", "Paul"],
+        "6E": ["Louis", "Alice", "Gabriel", "Sarah", "Hugo", "Jade", "Jules", "Lina", "Enzo", "Mila"],
+        "6F": ["Raphaël", "Rose", "Arthur", "Emma", "Noah", "Léa", "Thomas", "Manon", "Adam", "Inès"]
+    };
+
+    // État du jeu en cours
+    let currentSeance = "seance_10";
+    let currentIndex = 0;
+    let timerInterval = null;
     let scores = { "Équipe 1": 0, "Équipe 2": 0, "Équipe 3": 0, "Équipe 4": 0, "Équipe 5": 0, "Équipe 6": 0 };
-    
-    // Initialisation des équipes
+
     function initTeams() {
-        const container = document.getElementById('teams-container');
-        container.innerHTML = '';
+        const grid = document.getElementById('teams-grid');
+        grid.innerHTML = '';
         for (let [team, score] of Object.entries(scores)) {
-            container.innerHTML += `
-                <div class="team-box">
-                    <h3>${team}</h3>
-                    <div class="score" id="score-${team}">${score}</div>
-                    <button onclick="modifierScore('${team}', 1)">+</button>
-                    <button onclick="modifierScore('${team}', -1)">-</button>
+            grid.innerHTML += `
+                <div class="team-card">
+                    <div class="team-name">${team}</div>
+                    <div class="team-score" id="score-${team}">${score}</div>
+                    <div class="score-btns">
+                        <button class="btn-success" onclick="modifierScore('${team}', 1)">+1</button>
+                        <button class="btn-accent" onclick="modifierScore('${team}', 2)">+2</button>
+                        <button style="background:var(--danger)" onclick="modifierScore('${team}', -1)">-1</button>
+                    </div>
                 </div>
             `;
         }
     }
 
     function modifierScore(team, delta) {
-        scores[team] += delta;
+        scores[team] = Math.max(0, scores[team] + delta);
         document.getElementById(`score-${team}`).innerText = scores[team];
     }
 
-    function tirerEleve() {
-        const classe = document.getElementById('select-classe').value;
-        const liste = elevesParClasse[classe];
-        const eleveAleatoire = liste[Math.floor(Math.random() * liste.length)];
-        document.getElementById('selected-student').innerText = `👉 Élève désigné : ${eleveAleatoire}`;
+    function reinitialiserScores() {
+        if(confirm("Voulez-vous vraiment remettre tous les scores à zéro ?")) {
+            for (let team in scores) scores[team] = 0;
+            initTeams();
+        }
     }
 
-    let interval;
+    function chargerPartie() {
+        currentSeance = document.getElementById('select-seance').value;
+        currentIndex = 0;
+        afficherQuestionCourante();
+        alert("Séance chargée avec succès ! Le plateau est prêt.");
+    }
+
+    function afficherQuestionCourante() {
+        const questions = questionsDatabase[currentSeance];
+        const q = questions[currentIndex];
+        
+        document.getElementById('q-counter').innerText = `Question ${currentIndex + 1} sur ${questions.length}`;
+        document.getElementById('q-time-target').innerText = `Temps conseillé : ${q.temps} s`;
+        document.getElementById('question-text').innerText = q.texte;
+        document.getElementById('timer-display').innerText = q.temps + " s";
+        document.getElementById('correction-box').style.display = 'none';
+        document.getElementById('correction-text').innerText = q.correction;
+        
+        clearInterval(timerInterval);
+    }
+
+    function changerQuestion(dir) {
+        const questions = questionsDatabase[currentSeance];
+        currentIndex += dir;
+        if (currentIndex < 0) currentIndex = 0;
+        if (currentIndex >= questions.length) currentIndex = questions.length - 1;
+        afficherQuestionCourante();
+    }
+
     function lancerChrono() {
-        let tempsRestant = 45; // Durée par défaut de la question
+        const questions = questionsDatabase[currentSeance];
+        let tempsRestant = questions[currentIndex].temps;
         const display = document.getElementById('timer-display');
-        clearInterval(interval);
-        interval = setInterval(() => {
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
             display.innerText = tempsRestant + " s";
             if (tempsRestant <= 0) {
-                clearInterval(interval);
-                display.innerText = "Temps écoulé !";
+                clearInterval(timerInterval);
+                display.innerText = "Temps écoulé ! ⏰";
             }
             tempsRestant--;
         }, 1000);
@@ -128,14 +419,30 @@
 
     function afficherCorrection() {
         document.getElementById('correction-box').style.display = 'block';
-        document.getElementById('correction-text').innerText = "3 x 45 minutes = 135 minutes = 2h15mn (Exemple)";
     }
 
-    function logout() {
-        alert("Déconnexion simulée.");
+    function tirerEleve() {
+        const classe = document.getElementById('select-classe').value;
+        const liste = elevesParClasse[classe] || ["Élève 1", "Élève 2"];
+        const resultatDiv = document.getElementById('selected-student');
+        
+        // Petite animation de suspense
+        let compteur = 0;
+        const anim = setInterval(() => {
+            const aleatoireTemp = liste[Math.floor(Math.random() * liste.length)];
+            resultatDiv.innerText = `🎲 Tirage... ${aleatoireTemp}`;
+            compteur++;
+            if (compteur > 10) {
+                clearInterval(anim);
+                const eleveFinal = liste[Math.floor(Math.random() * liste.length)];
+                resultatDiv.innerText = `🎯 Élève désigné : ${eleveFinal}`;
+            }
+        }, 80);
     }
 
+    // Initialisation au chargement
     initTeams();
+    afficherQuestionCourante();
 </script>
 
 </body>
