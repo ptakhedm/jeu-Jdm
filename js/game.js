@@ -131,6 +131,7 @@ function login() {
   $("class-selection-screen").classList.remove("is-hidden");
   $("class-selection-intro").textContent = `${teacher.name}, choisissez la classe avec laquelle vous jouez aujourd’hui.`;
   $("owned-class-choices").innerHTML = teacher.classes.map((name, index) => `<label class="class-choice ${index === 0 ? "selected" : ""}"><input type="radio" name="active-class" value="${name}" ${index === 0 ? "checked" : ""}> <span>${name}</span></label>`).join("");
+  requestAnimationFrame(() => document.querySelector('input[name="active-class"]:checked')?.focus());
 }
 
 function enterSelectedClass() {
@@ -235,11 +236,10 @@ $("class-selection-form").addEventListener("submit", event => {
 $("teacher-select").addEventListener("change", () => {
   if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
 });
-$("class-selection-screen").addEventListener("keydown", event => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    enterSelectedClass();
-  }
+document.addEventListener("keydown", event => {
+  if (event.key !== "Enter" || $("class-selection-screen").classList.contains("is-hidden")) return;
+  event.preventDefault();
+  enterSelectedClass();
 });
 $("owned-class-choices").addEventListener("change", event => {
   document.querySelectorAll(".class-choice").forEach(label => label.classList.toggle("selected", label.contains(event.target)));
