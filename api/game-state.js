@@ -73,7 +73,7 @@ async function ensureDatabase() {
     await sql`
       INSERT INTO teachers (teacher_id, name, password, classes)
       VALUES (${teacherId}, ${teacher.name}, ${teacher.password}, ${JSON.stringify(teacher.classes)}::jsonb)
-      ON CONFLICT (teacher_id) DO UPDATE SET name = EXCLUDED.name, password = EXCLUDED.password, classes = EXCLUDED.classes, updated_at = NOW()
+      ON CONFLICT (teacher_id) DO NOTHING
     `;
   }
   for (const item of initialClasses) {
@@ -83,6 +83,27 @@ async function ensureDatabase() {
       ON CONFLICT (class_name) DO NOTHING
     `;
   }
+}
+
+function isAdmin(password) {
+  return Boolean(process.env.ADMIN_PASSWORD) && password === process.env.ADMIN_PASSWORD;
+}
+
+function validText(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+async function adminData() {
+  const content = await sql`SELECT students, question_sets, class_catalog FROM game_content WHERE id = 1`;
+  const teacherRows = await sql`SELECT teacher_id, name, classes FROM teachers ORDER BY teacher_id`;
+  return { teachers: teacherRows, students: content[0].students, questionSets: content[0].question_sets, classCatalog: content[0].class_catalog };
+}
+
+async function updateContent(mutator) {
+  const row = await sql`SELECT students, class_catalog FROM game_content WHERE id = 1`;
+  const content = { students: row[0].students, classCatalog: row[0].class_catalog };
+  mutator(content);
+  await sql`UPDATE game_content SET students = ${JSON.stringify(content.students)}::jsonb, class_catalog = ${JSON.stringify(content.classCatalog)}::jsonb, updated_at = NOW() WHERE id = 1`;
 }
 
 async function snapshot() {
@@ -114,6 +135,56 @@ export default async function handler(request, response) {
     getDatabaseClient();
     await ensureDatabase();
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+    if (request.method === "POST" && typeof body.action === "string" && body.action.startsWith("admin-")) {
+      if (!process.env.ADMIN_PASSWORD) return response.status(503).json({ error: "ADMIN_PASSWORD doit être configuré sur le serveur" });
+      if (!isAdmin(body.adminPassword)) return response.status(401).json({ error: "Accès administrateur refusé" });
+      if (body.action === "admin-data") return response.status(200).json(await adminData());
+      if (body.action === "admin-save-teacher") {
+        const teacher = body.teacher || {};
+        if (!validText(teacher.id) || !validText(teacher.name) || !Array.isArray(teacher.classes)) return response.status(400).json({ error: "Professeur invalide" });
+        const current = await sql`SELECT password FROM teachers WHERE teacher_id = ${teacher.id}`;
+        const password = validText(teacher.password) ? teacher.password : current[0]?.password;
+        if (!validText(password)) return response.status(400).json({ error: "Un mot de passe est requis pour un nouveau professeur" });
+        await sql`INSERT INTO teachers (teacher_id, name, password, classes) VALUES (${teacher.id.trim()}, ${teacher.name.trim()}, ${password}, ${JSON.stringify(teacher.classes)}::jsonb) ON CONFLICT (teacher_id) DO UPDATE SET name = EXCLUDED.name, password = EXCLUDED.password, classes = EXCLUDED.classes, updated_at = NOW()`;
+        return response.status(200).json(await adminData());
+      }
+      if (body.action === "admin-delete-teacher") {
+        await sql`DELETE FROM teachers WHERE teacher_id = ${body.teacherId}`;
+        return response.status(200).json(await adminData());
+      }
+      if (body.action === "admin-save-class") {
+        const item = body.item || {};
+        if (!validText(item.name) || !/^#[0-9a-f]{6}$/i.test(item.color || "")) return response.status(400).json({ error: "Classe invalide" });
+        await updateContent(content => {
+          const index = content.classCatalog.findIndex(entry => entry.name === item.name);
+          if (index >= 0) content.classCatalog[index] = { name: item.name.trim(), color: item.color };
+          else content.classCatalog.push({ name: item.name.trim(), color: item.color });
+          content.students[item.name.trim()] ||= [];
+        });
+        await sql`INSERT INTO class_progression (class_name, position, rounds, next_question) VALUES (${item.name.trim()}, 0, 0, 0) ON CONFLICT (class_name) DO NOTHING`;
+        return response.status(200).json(await adminData());
+      }
+      if (body.action === "admin-delete-class") {
+        if (!validText(body.className)) return response.status(400).json({ error: "Classe invalide" });
+        await updateContent(content => {
+          content.classCatalog = content.classCatalog.filter(item => item.name !== body.className);
+          delete content.students[body.className];
+        });
+        const owners = await sql`SELECT teacher_id, classes FROM teachers`;
+        for (const owner of owners) {
+          const classes = owner.classes.filter(name => name !== body.className);
+          await sql`UPDATE teachers SET classes = ${JSON.stringify(classes)}::jsonb, updated_at = NOW() WHERE teacher_id = ${owner.teacher_id}`;
+        }
+        await sql`DELETE FROM class_progression WHERE class_name = ${body.className}`;
+        return response.status(200).json(await adminData());
+      }
+      if (body.action === "admin-save-students") {
+        if (!validText(body.className) || !Array.isArray(body.students)) return response.status(400).json({ error: "Liste d’élèves invalide" });
+        await updateContent(content => { content.students[body.className] = body.students.filter(validText).map(name => name.trim()); });
+        return response.status(200).json(await adminData());
+      }
+      return response.status(400).json({ error: "Action administrateur inconnue" });
+    }
     if (request.method === "POST" && body.action === "login") {
       const result = await sql`SELECT teacher_id, name, password, classes FROM teachers WHERE teacher_id = ${body.teacherId}`;
       const teacher = result[0];
