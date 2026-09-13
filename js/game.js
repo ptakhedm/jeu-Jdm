@@ -347,7 +347,9 @@ async function closeCorrection() {
     $("move-message").textContent = `${name} a terminé sa série de questions n°${state.classes[name].rounds}.`;
     notify("🏁 Les 5 questions sont terminées !");
   } else {
-    state.waitingNext = true;
+    state.question = state.classes[name].nextQuestion;
+    state.waitingNext = false;
+    syncSeriesToActiveClass();
     $("roll-dice").textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
   }
