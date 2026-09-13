@@ -97,7 +97,7 @@ async function snapshot() {
     content: {
       ...content[0],
       teachers: teachersFromDatabase,
-      question_sets: Object.fromEntries(Object.entries(content[0].question_sets).map(([series, questions]) => [series, questions.map(([text, seconds, , image]) => [text, seconds, ...(image ? [image] : [])])] ))
+      question_sets: content[0].question_sets
     },
     classes
   };

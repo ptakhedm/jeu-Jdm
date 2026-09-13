@@ -32,10 +32,6 @@ let questionSets = {};
 
 function selectedTeacherId() { return $("teacher-select").value; }
 
-function syncLoginUsername() {
-  $("login-username").value = selectedTeacherId();
-}
-
 async function persistClassState(name, event = null) {
   try {
     const snapshot = await saveGameState(name, state.classes[name], event);
@@ -54,7 +50,6 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
     const previousSelection = $("teacher-select").value;
     $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
     $("teacher-select").value = teachers[previousSelection] ? previousSelection : Object.keys(teachers)[0] || "";
-    syncLoginUsername();
     $("teacher-select").disabled = false;
     $("login-submit").disabled = false;
     Object.keys(students).forEach(key => delete students[key]);
@@ -218,7 +213,6 @@ function runStudentDraw() {
 
 async function login() {
   if (!Object.keys(teachers).length) await synchronizeGameState(false);
-  syncLoginUsername();
   const loadingStartedAt = performance.now();
   $("login-validation-screen").classList.remove("is-hidden");
   const result = await authenticateTeacher(selectedTeacherId(), $("password").value).catch(() => null);
@@ -298,6 +292,10 @@ async function applyAnswer(correct) {
   $("correct-answer").disabled = true;
   $("wrong-answer").disabled = true;
   setAnswerButtons(false);
+  $("correction-text").textContent = questionSets[state.series][state.question][2] || "Correction indisponible.";
+  $("stage-correction").classList.remove("is-hidden");
+  $("close-correction").classList.remove("is-hidden");
+  $("close-correction").disabled = true;
   $("timer-label").textContent = "Enregistrement de la réponse…";
   try {
     const result = await recordAnswer(state.activeClass, state.series, state.question, correct);
@@ -307,8 +305,7 @@ async function applyAnswer(correct) {
     console.warn("Enregistrement de la réponse indisponible.", error);
     notify("La réponse n’a pas pu être sauvegardée : vérifiez la connexion.");
   }
-  $("stage-correction").classList.remove("is-hidden");
-  $("close-correction").classList.remove("is-hidden");
+  $("close-correction").disabled = false;
   $("timer-label").textContent = correct
     ? "Bonne réponse : ferme la correction pour déplacer le pion."
     : "Réponse incorrecte : ferme la correction pour déplacer le pion.";
@@ -362,10 +359,8 @@ $("class-selection-form").addEventListener("submit", event => {
   enterSelectedClass();
 });
 $("teacher-select").addEventListener("change", () => {
-  syncLoginUsername();
   if (state.debug) loadDebugPassword(selectedTeacherId()).then(result => { $("password").value = result.password; }).catch(() => {});
 });
-$("teacher-select").addEventListener("input", syncLoginUsername);
 document.addEventListener("keydown", event => {
   if (event.key !== "Enter" || $("class-selection-screen").classList.contains("is-hidden")) return;
   event.preventDefault();
