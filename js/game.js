@@ -79,7 +79,6 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
   syncSeriesToActiveClass();
   renderClasses(state);
 }
-    localClass.color = classColors[classNames.indexOf(remoteClass.class_name)] || localClass.color;
 
 async function synchronizeGameState(animateChanges = true) {
   try {
