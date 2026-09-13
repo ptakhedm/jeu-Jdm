@@ -230,16 +230,21 @@ async function login() {
   state.activeClass = teacher.classes[0];
   state.current = 0;
   $("login-screen").classList.add("is-hidden");
+  if (teacher.classes.length === 1) {
+    await enterSelectedClass(teacher.classes[0]);
+    return;
+  }
   $("class-selection-screen").classList.remove("is-hidden");
   $("class-selection-intro").textContent = `${teacher.name}, choisissez la classe avec laquelle vous jouez aujourd’hui.`;
   $("owned-class-choices").innerHTML = teacher.classes.map((name, index) => `<label class="class-choice ${index === 0 ? "selected" : ""}"><input type="radio" name="active-class" value="${name}" ${index === 0 ? "checked" : ""}> <span>${name}</span></label>`).join("");
   requestAnimationFrame(() => document.querySelector('input[name="active-class"]:checked')?.focus());
 }
 
-async function enterSelectedClass() {
-  const selected = document.querySelector('input[name="active-class"]:checked');
-  if (!selected) return;
-  state.activeClass = selected.value;
+async function enterSelectedClass(className = null) {
+  const selected = className ? null : document.querySelector('input[name="active-class"]:checked');
+  const selectedClass = className || selected?.value;
+  if (!selectedClass) return;
+  state.activeClass = selectedClass;
   state.current = state.teacher.classes.indexOf(state.activeClass);
   state.question = 0;
   state.waitingNext = false;
