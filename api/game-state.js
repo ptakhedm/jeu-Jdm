@@ -124,6 +124,21 @@ export default async function handler(request, response) {
       if (!result[0]) return response.status(404).json({ error: "Professeur inconnu" });
       return response.status(200).json({ password: result[0].password });
     }
+    if (request.method === "POST" && body.action === "record-answer") {
+      const { className, series, questionIndex, correct } = body;
+      if (!className || typeof series !== "string" || !Number.isInteger(questionIndex) || typeof correct !== "boolean") {
+        return response.status(400).json({ error: "Réponse invalide" });
+      }
+      const progression = await sql`SELECT position, rounds FROM class_progression WHERE class_name = ${className}`;
+      if (!progression[0]) return response.status(404).json({ error: "Classe inconnue" });
+      await sql`
+        INSERT INTO game_events (class_name, series, question_index, correct, position, rounds)
+        VALUES (${className}, ${series}, ${questionIndex}, ${correct}, ${progression[0].position}, ${progression[0].rounds})
+      `;
+      const storedContent = await sql`SELECT question_sets FROM game_content WHERE id = 1`;
+      const correction = storedContent[0]?.question_sets?.[series]?.[questionIndex]?.[2];
+      return response.status(200).json({ correction });
+    }
     if (request.method === "GET") return response.status(200).json(await snapshot());
     if (request.method !== "POST") return response.status(405).json({ error: "Méthode non autorisée" });
 

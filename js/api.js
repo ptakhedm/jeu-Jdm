@@ -35,3 +35,10 @@ export async function saveGameState(className, progression, event = null) {
     })
   });
 }
+
+export async function recordAnswer(className, series, questionIndex, correct) {
+  return request(endpoint, {
+    method: "POST",
+    body: JSON.stringify({ action: "record-answer", className, series, questionIndex, correct })
+  });
+}

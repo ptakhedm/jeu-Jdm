@@ -1,6 +1,6 @@
 import { DEBUG_ENABLED, teachers, classNames, classColors, classCatalog, classProgression, students, labels, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
-import { authenticateTeacher, loadDebugPassword, loadGameSnapshot, saveGameState } from "./api.js";
+import { authenticateTeacher, loadDebugPassword, loadGameSnapshot, recordAnswer, saveGameState } from "./api.js";
 
 const state = {
   teacher: null,
@@ -16,6 +16,7 @@ const state = {
   finished: false,
   pendingAnswer: null,
   remoteSyncTimer: null,
+  syncRevision: 0,
   debug: DEBUG_ENABLED && new URLSearchParams(window.location.search).get("debug") === "1",
   classes: Object.fromEntries(classNames.map((name, index) => [name, {
     pos: classProgression[name].position,
@@ -43,6 +44,9 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
     Object.keys(teachers).forEach(key => delete teachers[key]);
     Object.assign(teachers, snapshot.content.teachers || {});
     $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
+    $("teachers-loading").classList.add("is-hidden");
+    $("teacher-select").disabled = false;
+    $("login-submit").disabled = false;
     Object.keys(students).forEach(key => delete students[key]);
     Object.assign(students, snapshot.content.students || {});
     Object.keys(questionSets).forEach(key => delete questionSets[key]);
@@ -81,8 +85,12 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
 }
 
 async function synchronizeGameState(animateChanges = true) {
+  const revision = state.syncRevision;
   try {
-    applyRemoteSnapshot(await loadGameSnapshot(), animateChanges);
+    const snapshot = await loadGameSnapshot();
+    // Une réponse lancée juste avant un déplacement ne doit pas rétablir
+    // l'ancienne position pendant l'animation.
+    if (!state.moving && revision === state.syncRevision) applyRemoteSnapshot(snapshot, animateChanges);
   } catch (error) {
     // Le jeu reste utilisable hors ligne ; la prochaine tentative reprendra automatiquement.
     console.warn("Base de données indisponible, fonctionnement local conservé.", error);
@@ -108,6 +116,7 @@ function syncSeriesToActiveClass() {
 async function moveClass(name, steps) {
   if (state.moving || !state.teacher.classes.includes(name)) return;
   state.moving = true;
+  state.syncRevision += 1;
   const data = state.classes[name];
   const direction = Math.sign(steps);
   for (let index = 0; index < Math.abs(steps); index++) {
@@ -118,8 +127,8 @@ async function moveClass(name, steps) {
     await sleep(470);
   }
   renderClasses(state);
+  await persistClassState(name);
   state.moving = false;
-  void persistClassState(name);
 }
 
 function setAnswerButtons(visible) {
@@ -256,12 +265,11 @@ function applyAnswer(correct) {
   clearInterval(state.timer);
   state.challengeActive = false;
   state.pendingAnswer = correct;
-  void persistClassState(state.activeClass, {
-    event: "answer",
-    series: state.series,
-    questionIndex: state.question,
-    correct
-  });
+  void recordAnswer(state.activeClass, state.series, state.question, correct)
+    .then(result => {
+      if (result.correction !== undefined) $("correction-text").textContent = result.correction;
+    })
+    .catch(error => console.warn("Enregistrement de la réponse indisponible.", error));
   $("correct-answer").disabled = true;
   $("wrong-answer").disabled = true;
   setAnswerButtons(false);
@@ -309,7 +317,7 @@ async function closeCorrection() {
     $("roll-dice").textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
   }
-  void persistClassState(name);
+  if (lastQuestion) void persistClassState(name);
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });

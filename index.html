@@ -17,10 +17,14 @@
       <p>Une course par équipes jusqu’au Palais des Mathématiques.</p>
       <form id="login-form">
         <label class="login-label" for="teacher-select">Professeur</label>
-        <select id="teacher-select"></select>
+        <div id="teachers-loading" class="teachers-loading" role="status" aria-live="polite">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <span>Chargement des professeurs…</span>
+        </div>
+        <select id="teacher-select" disabled aria-describedby="teachers-loading"></select>
         <label class="login-label" for="password">Mot de passe</label>
         <input id="password" type="password" placeholder="Mot de passe professeur" required>
-        <button class="game-button primary" type="submit">Commencer la partie</button>
+        <button id="login-submit" class="game-button primary" type="submit" disabled>Commencer la partie</button>
       </form>
       <small>Comptes de démonstration : garrel2026, takhedmit2026, marovelli2026 ou berquet2026</small>
     </section>
