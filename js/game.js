@@ -1,5 +1,6 @@
-import { DEBUG_ENABLED, teachers, classNames, classColors, classProgression, students, questionSets, updateClassProgression } from "./data.js";
+import { DEBUG_ENABLED, teachers, classNames, classColors, classCatalog, classProgression, students, questionSets, labels, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
+import { loadGameSnapshot, saveGameState } from "./api.js";
 
 const state = {
   teacher: null,
@@ -14,6 +15,7 @@ const state = {
   waitingNext: false,
   finished: false,
   pendingAnswer: null,
+  remoteSyncTimer: null,
   debug: DEBUG_ENABLED && new URLSearchParams(window.location.search).get("debug") === "1",
   classes: Object.fromEntries(classNames.map((name, index) => [name, {
     pos: classProgression[name].position,
@@ -23,6 +25,75 @@ const state = {
 };
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+async function persistClassState(name, event = null) {
+  try {
+    const snapshot = await saveGameState(name, state.classes[name], event);
+    applyRemoteSnapshot(snapshot, false);
+  } catch (error) {
+    console.warn("Synchronisation indisponible, fonctionnement local conservé.", error);
+  }
+}
+
+function applyRemoteSnapshot(snapshot, animateChanges = true) {
+  if (!snapshot?.classes) return;
+  if (snapshot.content) {
+    Object.keys(teachers).forEach(key => delete teachers[key]);
+    Object.assign(teachers, snapshot.content.teachers || {});
+    $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
+    Object.keys(students).forEach(key => delete students[key]);
+    Object.assign(students, snapshot.content.students || {});
+    Object.keys(questionSets).forEach(key => delete questionSets[key]);
+    Object.assign(questionSets, snapshot.content.question_sets || {});
+    labels.splice(0, labels.length, ...(snapshot.content.labels || []));
+    const remoteCatalog = snapshot.content.class_catalog || [];
+    classNames.splice(0, classNames.length, ...remoteCatalog.map(item => item.name));
+    classColors.splice(0, classColors.length, ...remoteCatalog.map(item => item.color));
+    classCatalog.splice(0, classCatalog.length, ...remoteCatalog);
+    $("teacher-select").dispatchEvent(new Event("change"));
+  }
+  snapshot.classes.forEach(remoteClass => {
+    if (!state.classes[remoteClass.class_name]) {
+      const classIndex = classNames.indexOf(remoteClass.class_name);
+      state.classes[remoteClass.class_name] = {
+        pos: remoteClass.position,
+        rounds: remoteClass.rounds,
+        color: classColors[classIndex] || "#9766bc"
+      };
+    }
+    const localClass = state.classes[remoteClass.class_name];
+    const previousPosition = localClass.pos;
+    localClass.color = classColors[classNames.indexOf(remoteClass.class_name)] || localClass.color;
+    localClass.pos = remoteClass.position;
+    localClass.rounds = remoteClass.rounds;
+    updateClassProgression(remoteClass.class_name, { position: remoteClass.position, rounds: remoteClass.rounds });
+    if (animateChanges && !state.moving && previousPosition !== localClass.pos) {
+      animatePawn(state, remoteClass.class_name, previousPosition);
+    }
+  });
+  Object.keys(state.classes).forEach(name => {
+    if (!classNames.includes(name)) delete state.classes[name];
+  });
+  syncSeriesToActiveClass();
+  renderClasses(state);
+}
+    localClass.color = classColors[classNames.indexOf(remoteClass.class_name)] || localClass.color;
+
+async function synchronizeGameState(animateChanges = true) {
+  try {
+    applyRemoteSnapshot(await loadGameSnapshot(), animateChanges);
+  } catch (error) {
+    // Le jeu reste utilisable hors ligne ; la prochaine tentative reprendra automatiquement.
+    console.warn("Base de données indisponible, fonctionnement local conservé.", error);
+  }
+}
+
+function startRemoteSync() {
+  clearInterval(state.remoteSyncTimer);
+  state.remoteSyncTimer = setInterval(() => {
+    if (!state.moving) synchronizeGameState(true);
+  }, 2000);
+}
 
 function syncSeriesToActiveClass() {
   const seriesCount = Object.keys(questionSets).length;
@@ -47,6 +118,7 @@ async function moveClass(name, steps) {
   }
   renderClasses(state);
   state.moving = false;
+  void persistClassState(name);
 }
 
 function setAnswerButtons(visible) {
@@ -134,7 +206,7 @@ function login() {
   requestAnimationFrame(() => document.querySelector('input[name="active-class"]:checked')?.focus());
 }
 
-function enterSelectedClass() {
+async function enterSelectedClass() {
   const selected = document.querySelector('input[name="active-class"]:checked');
   if (!selected) return;
   state.activeClass = selected.value;
@@ -145,8 +217,10 @@ function enterSelectedClass() {
   syncSeriesToActiveClass();
   $("class-selection-screen").classList.add("is-hidden");
   $("game-screen").classList.remove("is-hidden");
+  await synchronizeGameState(false);
   renderBoard(state);
   updateQuestion(state, questionSets);
+  startRemoteSync();
 }
 
 function launchQuestion() {
@@ -193,6 +267,8 @@ async function closeCorrection() {
   if (typeof state.pendingAnswer !== "boolean") return;
   const correct = state.pendingAnswer;
   state.pendingAnswer = null;
+  const answerSeries = state.series;
+  const answerQuestion = state.question;
   const name = state.activeClass;
   let delta = correct ? 2 : -1;
   if (correct) state.correctAnswers += 1;
@@ -226,6 +302,12 @@ async function closeCorrection() {
     $("roll-dice").textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
   }
+  void persistClassState(name, {
+    event: "answer",
+    series: answerSeries,
+    questionIndex: answerQuestion,
+    correct
+  });
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });
@@ -250,6 +332,7 @@ $("back-to-login").addEventListener("click", () => {
 });
 $("logout").addEventListener("click", () => {
   clearInterval(state.timer);
+  clearInterval(state.remoteSyncTimer);
   state.challengeActive = false;
   $("game-screen").classList.add("is-hidden");
   $("class-selection-screen").classList.add("is-hidden");
@@ -261,3 +344,4 @@ $("correct-answer").addEventListener("click", () => applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
 if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
+void synchronizeGameState(false);

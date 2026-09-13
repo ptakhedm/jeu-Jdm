@@ -10,6 +10,7 @@ export const DEBUG_ENABLED = true;
 
 export const classNames = ["6ème 1", "6ème 2", "6ème 3", "6ème 4", "6ème 5"];
 export const classColors = ["#e15a4f", "#4e92ca", "#55a66f", "#e7a13b", "#9766bc"];
+export const classCatalog = classNames.map((name, index) => ({ name, color: classColors[index] }));
 // Données persistables : cette structure pourra être remplacée par la réponse de l’API.
 export const classProgression = {
   "6ème 1": { position: 0, rounds: 0 },
