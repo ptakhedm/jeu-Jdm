@@ -10,24 +10,32 @@
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <main id="login-screen" class="login-screen">
+    <div id="login-loading-overlay" class="loading-overlay" role="status" aria-live="polite">
+      <div class="loading-panel"><span class="loading-spinner large" aria-hidden="true"></span><strong>Préparation de la connexion…</strong><span>Chargement de la liste des professeurs</span></div>
+    </div>
     <section class="login-card">
       <div class="logo-goose">🪿</div>
       <p class="eyebrow">AVENTURE MATHÉMATIQUE</p>
       <h1>Le Grand Jeu de l’Oie</h1>
       <p>Une course par équipes jusqu’au Palais des Mathématiques.</p>
-      <form id="login-form">
+      <form id="login-form" autocomplete="on">
         <label class="login-label" for="teacher-select">Professeur</label>
         <div id="teachers-loading" class="teachers-loading" role="status" aria-live="polite">
           <span class="loading-spinner" aria-hidden="true"></span>
           <span>Chargement des professeurs…</span>
         </div>
-        <select id="teacher-select" disabled aria-describedby="teachers-loading"></select>
+        <input id="teacher-select" name="username" type="text" list="teacher-options" autocomplete="username" placeholder="Choisissez un professeur" disabled aria-describedby="teachers-loading" required>
+        <datalist id="teacher-options"></datalist>
         <label class="login-label" for="password">Mot de passe</label>
-        <input id="password" type="password" placeholder="Mot de passe professeur" required>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Mot de passe professeur" required>
         <button id="login-submit" class="game-button primary" type="submit" disabled>Commencer la partie</button>
       </form>
       <small>Comptes de démonstration : garrel2026, takhedmit2026, marovelli2026 ou berquet2026</small>
     </section>
+  </main>
+
+  <main id="board-loading-screen" class="loading-screen is-hidden" role="status" aria-live="polite">
+    <div class="loading-panel"><span class="loading-spinner large" aria-hidden="true"></span><strong>Préparation du plateau…</strong><span>Mise en place des pions et des équipes</span></div>
   </main>
 
   <main id="class-selection-screen" class="login-screen is-hidden">

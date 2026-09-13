@@ -26,7 +26,12 @@ const state = {
 };
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+const initialLoadStartedAt = performance.now();
 let questionSets = {};
+
+function selectedTeacherId() {
+  return Object.entries(teachers).find(([, teacher]) => teacher.name === $("teacher-select").value)?.[0] || $("teacher-select").value;
+}
 
 async function persistClassState(name, event = null) {
   try {
@@ -43,8 +48,11 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
   if (snapshot.content) {
     Object.keys(teachers).forEach(key => delete teachers[key]);
     Object.assign(teachers, snapshot.content.teachers || {});
-    $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
-    $("teachers-loading").classList.add("is-hidden");
+    const previousSelection = $("teacher-select").value;
+    $("teacher-options").innerHTML = Object.values(teachers).map(teacher => `<option value="${teacher.name}"></option>`).join("");
+    $("teacher-select").value = Object.values(teachers).some(teacher => teacher.name === previousSelection)
+      ? previousSelection
+      : Object.values(teachers)[0]?.name || "";
     $("teacher-select").disabled = false;
     $("login-submit").disabled = false;
     Object.keys(students).forEach(key => delete students[key]);
@@ -91,9 +99,11 @@ async function synchronizeGameState(animateChanges = true) {
     // Une réponse lancée juste avant un déplacement ne doit pas rétablir
     // l'ancienne position pendant l'animation.
     if (!state.moving && revision === state.syncRevision) applyRemoteSnapshot(snapshot, animateChanges);
+    return true;
   } catch (error) {
     // Le jeu reste utilisable hors ligne ; la prochaine tentative reprendra automatiquement.
     console.warn("Base de données indisponible, fonctionnement local conservé.", error);
+    return false;
   }
 }
 
@@ -201,7 +211,7 @@ function runStudentDraw() {
 
 async function login() {
   if (!Object.keys(teachers).length) await synchronizeGameState(false);
-  const result = await authenticateTeacher($("teacher-select").value, $("password").value).catch(() => null);
+  const result = await authenticateTeacher(selectedTeacherId(), $("password").value).catch(() => null);
   const teacher = result?.teacher;
   if (!teacher) {
     notify("Identifiants incorrects");
@@ -228,10 +238,14 @@ async function enterSelectedClass() {
   state.finished = false;
   syncSeriesToActiveClass();
   $("class-selection-screen").classList.add("is-hidden");
-  $("game-screen").classList.remove("is-hidden");
+  $("board-loading-screen").classList.remove("is-hidden");
+  const boardLoadingStartedAt = performance.now();
   await synchronizeGameState(false);
   renderBoard(state);
   updateQuestion(state, questionSets);
+  await sleep(Math.max(0, 450 - (performance.now() - boardLoadingStartedAt)));
+  $("board-loading-screen").classList.add("is-hidden");
+  $("game-screen").classList.remove("is-hidden");
   startRemoteSync();
 }
 
@@ -326,7 +340,7 @@ $("class-selection-form").addEventListener("submit", event => {
   enterSelectedClass();
 });
 $("teacher-select").addEventListener("change", () => {
-  if (state.debug) loadDebugPassword($("teacher-select").value).then(result => { $("password").value = result.password; }).catch(() => {});
+  if (state.debug) loadDebugPassword(selectedTeacherId()).then(result => { $("password").value = result.password; }).catch(() => {});
 });
 document.addEventListener("keydown", event => {
   if (event.key !== "Enter" || $("class-selection-screen").classList.contains("is-hidden")) return;
@@ -353,6 +367,10 @@ $("roll-dice").addEventListener("click", launchQuestion);
 $("correct-answer").addEventListener("click", () => applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
-void synchronizeGameState(false).then(() => {
-  if (state.debug) loadDebugPassword($("teacher-select").value).then(result => { $("password").value = result.password; }).catch(() => {});
+void synchronizeGameState(false).then(async loaded => {
+  if (!loaded) return;
+  await sleep(Math.max(0, 500 - (performance.now() - initialLoadStartedAt)));
+  $("teachers-loading").classList.add("is-hidden");
+  $("login-loading-overlay").classList.add("is-hidden");
+  if (state.debug) loadDebugPassword(selectedTeacherId()).then(result => { $("password").value = result.password; }).catch(() => {});
 });
