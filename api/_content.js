@@ -1,5 +1,5 @@
 // Données privées du serveur : le préfixe _ évite d’en faire une route Vercel.
-export const DEBUG_ENABLED = true;
+export const DEBUG_ENABLED = false;
 export const teachers = {
   garrel: { name: "Mme Garrel", password: "garrel2026", classes: ["6ème 1", "6ème 2"] },
   takhedmit: { name: "M. Takhedmit", password: "takhedmit2026", classes: ["6ème 2", "6ème 3"] },

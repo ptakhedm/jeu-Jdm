@@ -37,8 +37,10 @@ async function persistClassState(name, event = null) {
     const snapshot = await saveGameState(name, state.classes[name], event);
     if (snapshot.correction !== undefined) $("correction-text").textContent = snapshot.correction;
     applyRemoteSnapshot(snapshot, false);
+    return true;
   } catch (error) {
     console.warn("Synchronisation indisponible, fonctionnement local conservé.", error);
+    return false;
   }
 }
 
@@ -336,6 +338,8 @@ async function closeCorrection() {
   if (lastQuestion) {
     state.classes[name].rounds += 1;
     updateClassProgression(name, { rounds: state.classes[name].rounds });
+    const saved = await persistClassState(name);
+    if (!saved) notify("La série n’a pas pu être sauvegardée : vérifiez la connexion.");
     syncSeriesToActiveClass();
     renderClasses(state);
     state.waitingNext = false;
@@ -350,7 +354,6 @@ async function closeCorrection() {
     $("roll-dice").textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
   }
-  if (lastQuestion) void persistClassState(name);
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });

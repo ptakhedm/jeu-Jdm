@@ -1,5 +1,5 @@
 // Le mode debug nécessite cette option à true et le paramètre ?debug=1 dans l’URL.
-export const DEBUG_ENABLED = true;
+export const DEBUG_ENABLED = false;
 
 // Les données métier sont chargées depuis l’API et la base PostgreSQL.
 export const teachers = {};
