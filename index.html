@@ -23,7 +23,6 @@
           <option value="marovelli">Mme Marovelli</option>
           <option value="berquet">M. Berquet</option>
         </select>
-        <label class="debug-option" for="debug-mode"><input id="debug-mode" type="checkbox"> Mode débogage <small>(mot de passe automatique, 3 s/question)</small></label>
         <label class="login-label" for="password">Mot de passe</label>
         <input id="password" type="password" placeholder="Mot de passe professeur" required>
         <button class="game-button primary" type="submit">Commencer la partie</button>
@@ -38,8 +37,10 @@
       <p class="eyebrow">SESSION DU PROFESSEUR</p>
       <h1>Choisir sa classe</h1>
       <p id="class-selection-intro">Avec quelle classe jouez-vous aujourd’hui ?</p>
-      <div id="owned-class-choices" class="owned-class-choices"></div>
-      <button id="start-class" class="game-button primary" type="button">Entrer sur le plateau</button>
+      <form id="class-selection-form">
+        <div id="owned-class-choices" class="owned-class-choices"></div>
+        <button id="start-class" class="game-button primary" type="submit">Entrer sur le plateau</button>
+      </form>
       <button id="back-to-login" class="text-button" type="button">Changer de professeur</button>
     </section>
   </main>

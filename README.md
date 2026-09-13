@@ -35,3 +35,5 @@ Le projet utilise des modules JavaScript natifs. Depuis le dossier du projet, la
 - `js/view.js` : rendu DOM/SVG, affichage des questions et mise à jour visuelle.
 - `js/game.js` : état de partie, règles, chrono, tirage au sort et événements.
 - `pack-1/figures/` : figures extraites des présentations.
+
+Le mode debug est désactivé par défaut dans l’interface. Pour l’utiliser ponctuellement, `DEBUG_ENABLED` doit être à `true` dans `js/data.js` et l’URL doit contenir `?debug=1` ; le mot de passe est alors prérempli et chaque question dure 3 secondes.

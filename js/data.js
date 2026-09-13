@@ -5,6 +5,9 @@ export const teachers = {
   berquet: { name: "M. Berquet", password: "berquet2026", classes: ["6ème 4", "6ème 5"] }
 };
 
+// Le mode debug nécessite cette option à true et le paramètre ?debug=1 dans l’URL.
+export const DEBUG_ENABLED = true;
+
 export const classNames = ["6ème 1", "6ème 2", "6ème 3", "6ème 4", "6ème 5"];
 export const classColors = ["#e15a4f", "#4e92ca", "#55a66f", "#e7a13b", "#9766bc"];
 // Données persistables : cette structure pourra être remplacée par la réponse de l’API.

@@ -1,4 +1,4 @@
-import { teachers, classNames, classColors, classProgression, students, questionSets, updateClassProgression } from "./data.js";
+import { DEBUG_ENABLED, teachers, classNames, classColors, classProgression, students, questionSets, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
 
 const state = {
@@ -14,7 +14,7 @@ const state = {
   waitingNext: false,
   finished: false,
   pendingAnswer: null,
-  debug: new URLSearchParams(window.location.search).get("debug") === "1",
+  debug: DEBUG_ENABLED && new URLSearchParams(window.location.search).get("debug") === "1",
   classes: Object.fromEntries(classNames.map((name, index) => [name, {
     pos: classProgression[name].position,
     rounds: classProgression[name].rounds,
@@ -23,11 +23,6 @@ const state = {
 };
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-
-function updateDebugMode() {
-  state.debug = $("debug-mode").checked;
-  if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
-}
 
 function syncSeriesToActiveClass() {
   const seriesCount = Object.keys(questionSets).length;
@@ -233,12 +228,13 @@ async function closeCorrection() {
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });
-$("debug-mode").checked = state.debug;
-$("debug-mode").addEventListener("change", updateDebugMode);
+$("class-selection-form").addEventListener("submit", event => {
+  event.preventDefault();
+  enterSelectedClass();
+});
 $("teacher-select").addEventListener("change", () => {
   if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
 });
-$("start-class").addEventListener("click", enterSelectedClass);
 $("class-selection-screen").addEventListener("keydown", event => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -264,4 +260,4 @@ $("roll-dice").addEventListener("click", launchQuestion);
 $("correct-answer").addEventListener("click", () => applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
-if (state.debug) updateDebugMode();
+if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
