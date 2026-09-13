@@ -143,7 +143,7 @@ export default async function handler(request, response) {
         VALUES (${className}, ${series}, ${questionIndex}, ${correct}, ${progression[0].position}, ${progression[0].rounds})
       `;
       const correction = storedContent[0]?.question_sets?.[series]?.[questionIndex]?.[2];
-      return response.status(200).json({ correction });
+      return response.status(200).json({ correction, nextQuestion });
     }
     if (request.method === "GET") return response.status(200).json(await snapshot());
     if (request.method !== "POST") return response.status(405).json({ error: "Méthode non autorisée" });

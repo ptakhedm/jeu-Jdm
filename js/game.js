@@ -32,6 +32,10 @@ let questionSets = {};
 
 function selectedTeacherId() { return $("teacher-select").value; }
 
+function syncLoginUsername() {
+  $("login-username").value = selectedTeacherId();
+}
+
 async function persistClassState(name, event = null) {
   try {
     const snapshot = await saveGameState(name, state.classes[name], event);
@@ -50,7 +54,7 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
     const previousSelection = $("teacher-select").value;
     $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
     $("teacher-select").value = teachers[previousSelection] ? previousSelection : Object.keys(teachers)[0] || "";
-    $("login-username").value = $("teacher-select").value;
+    syncLoginUsername();
     $("teacher-select").disabled = false;
     $("login-submit").disabled = false;
     Object.keys(students).forEach(key => delete students[key]);
@@ -214,7 +218,7 @@ function runStudentDraw() {
 
 async function login() {
   if (!Object.keys(teachers).length) await synchronizeGameState(false);
-  $("login-username").value = selectedTeacherId();
+  syncLoginUsername();
   const loadingStartedAt = performance.now();
   $("login-validation-screen").classList.remove("is-hidden");
   const result = await authenticateTeacher(selectedTeacherId(), $("password").value).catch(() => null);
@@ -285,20 +289,24 @@ function launchQuestion() {
   startTimer();
 }
 
-function applyAnswer(correct) {
+async function applyAnswer(correct) {
   if (state.moving || !state.challengeActive) return;
   clearInterval(state.timer);
   state.challengeActive = false;
   state.pendingAnswer = correct;
   state.classes[state.activeClass].nextQuestion = (state.question + 1) % questionSets[state.series].length;
-  void recordAnswer(state.activeClass, state.series, state.question, correct)
-    .then(result => {
-      if (result.correction !== undefined) $("correction-text").textContent = result.correction;
-    })
-    .catch(error => console.warn("Enregistrement de la réponse indisponible.", error));
   $("correct-answer").disabled = true;
   $("wrong-answer").disabled = true;
   setAnswerButtons(false);
+  $("timer-label").textContent = "Enregistrement de la réponse…";
+  try {
+    const result = await recordAnswer(state.activeClass, state.series, state.question, correct);
+    if (result.correction !== undefined) $("correction-text").textContent = result.correction;
+    if (Number.isInteger(result.nextQuestion)) state.classes[state.activeClass].nextQuestion = result.nextQuestion;
+  } catch (error) {
+    console.warn("Enregistrement de la réponse indisponible.", error);
+    notify("La réponse n’a pas pu être sauvegardée : vérifiez la connexion.");
+  }
   $("stage-correction").classList.remove("is-hidden");
   $("close-correction").classList.remove("is-hidden");
   $("timer-label").textContent = correct
@@ -352,9 +360,10 @@ $("class-selection-form").addEventListener("submit", event => {
   enterSelectedClass();
 });
 $("teacher-select").addEventListener("change", () => {
-  $("login-username").value = selectedTeacherId();
+  syncLoginUsername();
   if (state.debug) loadDebugPassword(selectedTeacherId()).then(result => { $("password").value = result.password; }).catch(() => {});
 });
+$("teacher-select").addEventListener("input", syncLoginUsername);
 document.addEventListener("keydown", event => {
   if (event.key !== "Enter" || $("class-selection-screen").classList.contains("is-hidden")) return;
   event.preventDefault();
@@ -377,8 +386,8 @@ $("logout").addEventListener("click", () => {
   $("login-screen").classList.remove("is-hidden");
 });
 $("roll-dice").addEventListener("click", launchQuestion);
-$("correct-answer").addEventListener("click", () => applyAnswer(true));
-$("wrong-answer").addEventListener("click", () => applyAnswer(false));
+$("correct-answer").addEventListener("click", () => void applyAnswer(true));
+$("wrong-answer").addEventListener("click", () => void applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
 void synchronizeGameState(false).then(async loaded => {
   if (!loaded) return;
