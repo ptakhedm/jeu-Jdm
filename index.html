@@ -24,14 +24,18 @@
           <span class="loading-spinner" aria-hidden="true"></span>
           <span>Chargement des professeurs…</span>
         </div>
-        <input id="teacher-select" name="username" type="text" list="teacher-options" autocomplete="username" placeholder="Choisissez un professeur" disabled aria-describedby="teachers-loading" required>
-        <datalist id="teacher-options"></datalist>
+        <select id="teacher-select" name="teacherId" disabled aria-describedby="teachers-loading" required></select>
+        <input id="login-username" class="sr-only" name="username" type="text" autocomplete="username" tabindex="-1" aria-hidden="true">
         <label class="login-label" for="password">Mot de passe</label>
         <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Mot de passe professeur" required>
         <button id="login-submit" class="game-button primary" type="submit" disabled>Commencer la partie</button>
       </form>
       <small>Comptes de démonstration : garrel2026, takhedmit2026, marovelli2026 ou berquet2026</small>
     </section>
+  </main>
+
+  <main id="login-validation-screen" class="loading-screen is-hidden" role="status" aria-live="polite">
+    <div class="loading-panel"><span class="loading-spinner large" aria-hidden="true"></span><strong>Connexion en cours…</strong><span>Vérification de vos identifiants</span></div>
   </main>
 
   <main id="board-loading-screen" class="loading-screen is-hidden" role="status" aria-live="polite">
@@ -65,14 +69,14 @@
 
       <aside class="side-panel">
         <section class="play-card current-card">
-          <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2><small id="series-status"></small></div></div>
+          <div class="card-heading"><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2><small id="series-status"></small></div></div>
           <div class="dice-area"><div id="dice" class="dice">🎲</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le jeu</button></div>
           <p id="move-message" class="move-message">La question, le chrono et le tirage se lancent automatiquement.</p>
         </section>
 
         <section class="play-card classes-card">
-          <div class="card-heading"><span class="step">03</span><div><p class="eyebrow">TABLEAU DE COURSE</p><h2>Toutes les classes</h2></div></div>
-          <p class="class-help">Positions des pions et nombre de tours réalisés.</p>
+          <div class="card-heading"><div><p class="eyebrow">TABLEAU DE COURSE</p></div></div>
+          <p class="class-help">Positions des pions et nombre de séries de questions terminées.</p>
           <div id="team-list" class="team-list"></div>
         </section>
       </aside>

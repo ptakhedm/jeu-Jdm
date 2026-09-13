@@ -31,6 +31,7 @@ export async function saveGameState(className, progression, event = null) {
       className,
       position: progression.pos,
       rounds: progression.rounds,
+      nextQuestion: progression.nextQuestion || 0,
       ...(event || {})
     })
   });

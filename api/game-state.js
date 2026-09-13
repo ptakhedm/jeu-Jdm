@@ -43,9 +43,11 @@ async function ensureDatabase() {
       class_name TEXT PRIMARY KEY,
       position INTEGER NOT NULL DEFAULT 0,
       rounds INTEGER NOT NULL DEFAULT 0,
+      next_question INTEGER NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE class_progression ADD COLUMN IF NOT EXISTS next_question INTEGER NOT NULL DEFAULT 0`;
   await sql`
     CREATE TABLE IF NOT EXISTS game_events (
       id BIGSERIAL PRIMARY KEY,
@@ -86,7 +88,7 @@ async function ensureDatabase() {
 async function snapshot() {
   const content = await sql`SELECT teachers, students, question_sets, labels, class_catalog FROM game_content WHERE id = 1`;
   const teacherRows = await sql`SELECT teacher_id, name, password, classes FROM teachers ORDER BY teacher_id`;
-  const classes = await sql`SELECT class_name, position, rounds, updated_at FROM class_progression ORDER BY class_name`;
+  const classes = await sql`SELECT class_name, position, rounds, next_question, updated_at FROM class_progression ORDER BY class_name`;
   const teachersFromDatabase = Object.fromEntries(teacherRows.map(teacher => [teacher.teacher_id, {
     name: teacher.name,
     classes: teacher.classes
@@ -131,26 +133,30 @@ export default async function handler(request, response) {
       }
       const progression = await sql`SELECT position, rounds FROM class_progression WHERE class_name = ${className}`;
       if (!progression[0]) return response.status(404).json({ error: "Classe inconnue" });
+      const storedContent = await sql`SELECT question_sets FROM game_content WHERE id = 1`;
+      const questionCount = storedContent[0]?.question_sets?.[series]?.length;
+      if (!questionCount || questionIndex >= questionCount) return response.status(400).json({ error: "Question invalide" });
+      const nextQuestion = (questionIndex + 1) % questionCount;
+      await sql`UPDATE class_progression SET next_question = ${nextQuestion}, updated_at = NOW() WHERE class_name = ${className}`;
       await sql`
         INSERT INTO game_events (class_name, series, question_index, correct, position, rounds)
         VALUES (${className}, ${series}, ${questionIndex}, ${correct}, ${progression[0].position}, ${progression[0].rounds})
       `;
-      const storedContent = await sql`SELECT question_sets FROM game_content WHERE id = 1`;
       const correction = storedContent[0]?.question_sets?.[series]?.[questionIndex]?.[2];
       return response.status(200).json({ correction });
     }
     if (request.method === "GET") return response.status(200).json(await snapshot());
     if (request.method !== "POST") return response.status(405).json({ error: "Méthode non autorisée" });
 
-    const { className, position, rounds } = body;
-    if (!className || !Number.isInteger(position) || !Number.isInteger(rounds)) {
+    const { className, position, rounds, nextQuestion = 0 } = body;
+    if (!className || !Number.isInteger(position) || !Number.isInteger(rounds) || !Number.isInteger(nextQuestion)) {
       return response.status(400).json({ error: "Progression de classe invalide" });
     }
 
     await sql`
-      INSERT INTO class_progression (class_name, position, rounds)
-      VALUES (${className}, ${position}, ${rounds})
-      ON CONFLICT (class_name) DO UPDATE SET position = EXCLUDED.position, rounds = EXCLUDED.rounds, updated_at = NOW()
+      INSERT INTO class_progression (class_name, position, rounds, next_question)
+      VALUES (${className}, ${position}, ${rounds}, ${nextQuestion})
+      ON CONFLICT (class_name) DO UPDATE SET position = EXCLUDED.position, rounds = EXCLUDED.rounds, next_question = EXCLUDED.next_question, updated_at = NOW()
     `;
 
     if (body.event === "answer") {

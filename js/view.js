@@ -128,7 +128,7 @@ export function animatePawn(state, name, fromPosition) {
 export function renderClasses(state) {
   $("team-list").innerHTML = classNames.map(name => {
     const data = state.classes[name];
-    return `<div class="team-row ${name === state.activeClass ? "active-team" : ""}"><span class="team-dot" style="background:${data.color}"></span><strong class="class-name">${name}</strong><span class="class-stats">Case ${data.pos}<br>${data.rounds} tour${data.rounds === 1 ? "" : "s"}${isPrime(data.pos) ? "<br>★ première" : ""}</span></div>`;
+    return `<div class="team-row ${name === state.activeClass ? "active-team" : ""}"><span class="team-dot" style="background:${data.color}"></span><strong class="class-name">${name}</strong><span class="class-stats">Case ${data.pos}<br>${data.rounds} série${data.rounds === 1 ? "" : "s"}${isPrime(data.pos) ? "<br>★ première" : ""}</span></div>`;
   }).join("");
   const currentName = state.teacher?.classes[state.current] || "";
   $("current-team").textContent = currentName;
@@ -138,7 +138,9 @@ export function renderClasses(state) {
 
 export function updateQuestion(state, questionSets) {
   const question = questionSets[state.series][state.question];
-  $("series-status").textContent = state.series;
+  const rounds = state.classes[state.activeClass]?.rounds || 0;
+  const completed = `${rounds} série${rounds === 1 ? "" : "s"} terminée${rounds === 1 ? "" : "s"}`;
+  $("series-status").textContent = `Série en cours : ${state.series} · prochaine question : ${state.question + 1}/${questionSets[state.series].length} · ${completed}`;
   $("stage-counter").textContent = `Question ${state.question + 1} / ${questionSets[state.series].length}`;
   $("stage-question").textContent = question[0];
   $("correction-text").textContent = question[2];

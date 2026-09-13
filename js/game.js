@@ -21,6 +21,7 @@ const state = {
   classes: Object.fromEntries(classNames.map((name, index) => [name, {
     pos: classProgression[name].position,
     rounds: classProgression[name].rounds,
+    nextQuestion: 0,
     color: classColors[index]
   }]))
 };
@@ -29,9 +30,7 @@ const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, millise
 const initialLoadStartedAt = performance.now();
 let questionSets = {};
 
-function selectedTeacherId() {
-  return Object.entries(teachers).find(([, teacher]) => teacher.name === $("teacher-select").value)?.[0] || $("teacher-select").value;
-}
+function selectedTeacherId() { return $("teacher-select").value; }
 
 async function persistClassState(name, event = null) {
   try {
@@ -49,10 +48,9 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
     Object.keys(teachers).forEach(key => delete teachers[key]);
     Object.assign(teachers, snapshot.content.teachers || {});
     const previousSelection = $("teacher-select").value;
-    $("teacher-options").innerHTML = Object.values(teachers).map(teacher => `<option value="${teacher.name}"></option>`).join("");
-    $("teacher-select").value = Object.values(teachers).some(teacher => teacher.name === previousSelection)
-      ? previousSelection
-      : Object.values(teachers)[0]?.name || "";
+    $("teacher-select").innerHTML = Object.entries(teachers).map(([key, teacher]) => `<option value="${key}">${teacher.name}</option>`).join("");
+    $("teacher-select").value = teachers[previousSelection] ? previousSelection : Object.keys(teachers)[0] || "";
+    $("login-username").value = $("teacher-select").value;
     $("teacher-select").disabled = false;
     $("login-submit").disabled = false;
     Object.keys(students).forEach(key => delete students[key]);
@@ -72,6 +70,7 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
       state.classes[remoteClass.class_name] = {
         pos: remoteClass.position,
         rounds: remoteClass.rounds,
+        nextQuestion: remoteClass.next_question || 0,
         color: classColors[classIndex] || "#9766bc"
       };
     }
@@ -80,6 +79,7 @@ function applyRemoteSnapshot(snapshot, animateChanges = true) {
     localClass.color = classColors[classNames.indexOf(remoteClass.class_name)] || localClass.color;
     localClass.pos = remoteClass.position;
     localClass.rounds = remoteClass.rounds;
+    localClass.nextQuestion = remoteClass.next_question || 0;
     updateClassProgression(remoteClass.class_name, { position: remoteClass.position, rounds: remoteClass.rounds });
     if (animateChanges && !state.moving && previousPosition !== localClass.pos) {
       animatePawn(state, remoteClass.class_name, previousPosition);
@@ -120,7 +120,11 @@ function syncSeriesToActiveClass() {
   const nextSeries = `Série ${(rounds % seriesCount) + 1}`;
   if (state.series !== nextSeries) state.question = 0;
   state.series = nextSeries;
-  if ($("series-status")) $("series-status").textContent = state.series;
+  if ($("series-status")) {
+    const totalQuestions = questionSets[state.series]?.length || 5;
+    const completed = `${rounds} série${rounds === 1 ? "" : "s"} terminée${rounds === 1 ? "" : "s"}`;
+    $("series-status").textContent = `Série en cours : ${state.series} · prochaine question : ${state.question + 1}/${totalQuestions} · ${completed}`;
+  }
 }
 
 async function moveClass(name, steps) {
@@ -211,7 +215,11 @@ function runStudentDraw() {
 
 async function login() {
   if (!Object.keys(teachers).length) await synchronizeGameState(false);
+  const loadingStartedAt = performance.now();
+  $("login-validation-screen").classList.remove("is-hidden");
   const result = await authenticateTeacher(selectedTeacherId(), $("password").value).catch(() => null);
+  await sleep(Math.max(0, 450 - (performance.now() - loadingStartedAt)));
+  $("login-validation-screen").classList.add("is-hidden");
   const teacher = result?.teacher;
   if (!teacher) {
     notify("Identifiants incorrects");
@@ -236,11 +244,13 @@ async function enterSelectedClass() {
   state.question = 0;
   state.waitingNext = false;
   state.finished = false;
-  syncSeriesToActiveClass();
   $("class-selection-screen").classList.add("is-hidden");
   $("board-loading-screen").classList.remove("is-hidden");
   const boardLoadingStartedAt = performance.now();
   await synchronizeGameState(false);
+  syncSeriesToActiveClass();
+  state.question = state.classes[state.activeClass]?.nextQuestion || 0;
+  syncSeriesToActiveClass();
   renderBoard(state);
   updateQuestion(state, questionSets);
   await sleep(Math.max(0, 450 - (performance.now() - boardLoadingStartedAt)));
@@ -267,6 +277,7 @@ function launchQuestion() {
     state.question = (state.question + 1) % questionSets[state.series].length;
     state.waitingNext = false;
   }
+  syncSeriesToActiveClass();
   updateQuestion(state, questionSets);
   resetQuestionView();
   $("question-modal").classList.remove("is-hidden");
@@ -279,6 +290,7 @@ function applyAnswer(correct) {
   clearInterval(state.timer);
   state.challengeActive = false;
   state.pendingAnswer = correct;
+  state.classes[state.activeClass].nextQuestion = (state.question + 1) % questionSets[state.series].length;
   void recordAnswer(state.activeClass, state.series, state.question, correct)
     .then(result => {
       if (result.correction !== undefined) $("correction-text").textContent = result.correction;
@@ -324,7 +336,7 @@ async function closeCorrection() {
     state.waitingNext = false;
     state.finished = true;
     $("roll-dice").textContent = "↩️ Quitter";
-    $("move-message").textContent = `${name} a terminé sa série : tour ${state.classes[name].rounds}.`;
+    $("move-message").textContent = `${name} a terminé sa série de questions n°${state.classes[name].rounds}.`;
     notify("🏁 Les 5 questions sont terminées !");
   } else {
     state.waitingNext = true;
@@ -340,6 +352,7 @@ $("class-selection-form").addEventListener("submit", event => {
   enterSelectedClass();
 });
 $("teacher-select").addEventListener("change", () => {
+  $("login-username").value = selectedTeacherId();
   if (state.debug) loadDebugPassword(selectedTeacherId()).then(result => { $("password").value = result.password; }).catch(() => {});
 });
 document.addEventListener("keydown", event => {
