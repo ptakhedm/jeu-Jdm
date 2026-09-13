@@ -34,10 +34,12 @@ async function ensureDatabase() {
       question_sets JSONB NOT NULL,
       labels JSONB NOT NULL,
       class_catalog JSONB NOT NULL,
+      teachers_seeded BOOLEAN NOT NULL DEFAULT FALSE,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
   await sql`ALTER TABLE game_content ADD COLUMN IF NOT EXISTS class_catalog JSONB`;
+  await sql`ALTER TABLE game_content ADD COLUMN IF NOT EXISTS teachers_seeded BOOLEAN NOT NULL DEFAULT FALSE`;
   await sql`
     CREATE TABLE IF NOT EXISTS class_progression (
       class_name TEXT PRIMARY KEY,
@@ -69,12 +71,16 @@ async function ensureDatabase() {
     UPDATE game_content SET class_catalog = ${JSON.stringify(classCatalog)}::jsonb
     WHERE id = 1 AND class_catalog IS NULL
   `;
-  for (const [teacherId, teacher] of Object.entries(teachers)) {
-    await sql`
-      INSERT INTO teachers (teacher_id, name, password, classes)
-      VALUES (${teacherId}, ${teacher.name}, ${teacher.password}, ${JSON.stringify(teacher.classes)}::jsonb)
-      ON CONFLICT (teacher_id) DO NOTHING
-    `;
+  const seedStatus = await sql`SELECT teachers_seeded FROM game_content WHERE id = 1`;
+  if (!seedStatus[0]?.teachers_seeded) {
+    for (const [teacherId, teacher] of Object.entries(teachers)) {
+      await sql`
+        INSERT INTO teachers (teacher_id, name, password, classes)
+        VALUES (${teacherId}, ${teacher.name}, ${teacher.password}, ${JSON.stringify(teacher.classes)}::jsonb)
+        ON CONFLICT (teacher_id) DO NOTHING
+      `;
+    }
+    await sql`UPDATE game_content SET teachers_seeded = TRUE WHERE id = 1`;
   }
   for (const item of initialClasses) {
     await sql`
