@@ -122,8 +122,7 @@ function syncSeriesToActiveClass() {
   state.series = nextSeries;
   if ($("series-status")) {
     const totalQuestions = questionSets[state.series]?.length || 5;
-    const completed = `${rounds} série${rounds === 1 ? "" : "s"} terminée${rounds === 1 ? "" : "s"}`;
-    $("series-status").textContent = `Série en cours : ${state.series} · prochaine question : ${state.question + 1}/${totalQuestions} · ${completed}`;
+    $("series-status").textContent = `Série en cours : ${state.series} · prochaine question : ${state.question + 1}/${totalQuestions} · série : ${rounds}`;
   }
 }
 
@@ -215,6 +214,7 @@ function runStudentDraw() {
 
 async function login() {
   if (!Object.keys(teachers).length) await synchronizeGameState(false);
+  $("login-username").value = selectedTeacherId();
   const loadingStartedAt = performance.now();
   $("login-validation-screen").classList.remove("is-hidden");
   const result = await authenticateTeacher(selectedTeacherId(), $("password").value).catch(() => null);
