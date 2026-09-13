@@ -6,9 +6,15 @@ const initialClasses = Object.entries(classProgression).map(([className, progres
   position: progression.position,
   rounds: progression.rounds
 }));
-const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-if (!databaseUrl) throw new Error("DATABASE_URL ou POSTGRES_URL est requis");
-const sql = neon(databaseUrl);
+let sql;
+
+function getDatabaseClient() {
+  if (sql) return sql;
+  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL ou POSTGRES_URL est requis dans les variables Vercel");
+  sql = neon(databaseUrl);
+  return sql;
+}
 
 async function ensureDatabase() {
   await sql`
@@ -103,6 +109,7 @@ export default async function handler(request, response) {
   if (request.method === "OPTIONS") return response.status(204).end();
 
   try {
+    getDatabaseClient();
     await ensureDatabase();
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
     if (request.method === "POST" && body.action === "login") {
@@ -146,6 +153,9 @@ export default async function handler(request, response) {
     return response.status(200).json(await snapshot());
   } catch (error) {
     console.error("Erreur API game-state", error);
-    return response.status(500).json({ error: "Base de données indisponible" });
+    return response.status(500).json({
+      error: "Base de données indisponible",
+      detail: error.message
+    });
   }
 }
