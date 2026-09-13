@@ -4,7 +4,10 @@ Application de classe ludique pour collège, reconstruite autour d’un véritab
 
 ## Lancer le jeu
 
-Ouvrir `index.html` dans un navigateur moderne.
+Le projet utilise des modules JavaScript natifs. Depuis le dossier du projet, lancer un serveur local puis ouvrir l’adresse indiquée :
+
+- `python3 -m http.server 8000`
+- ouvrir `http://localhost:8000`
 
 - Comptes de démonstration : `garrel2026`, `takhedmit2026`, `marovelli2026`, `berquet2026`
 - Aucun serveur ni installation nécessaire.
@@ -26,6 +29,9 @@ Ouvrir `index.html` dans un navigateur moderne.
 
 ## Structure
 
-- `index.html` : interface et écran de projection.
-- `styles.css` : identité visuelle et animations.
-- `app.js` : plateau SVG, règles, questions, chrono et tirage au sort.
+- `index.html` : structure de l’interface et écran de projection.
+- `styles.css` : identité visuelle, mise en page et animations.
+- `js/data.js` : professeurs, classes, élèves, questions, corrections et figures.
+- `js/view.js` : rendu DOM/SVG, affichage des questions et mise à jour visuelle.
+- `js/game.js` : état de partie, règles, chrono, tirage au sort et événements.
+- `pack-1/figures/` : figures extraites des présentations.

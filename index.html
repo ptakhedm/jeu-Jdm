@@ -23,6 +23,7 @@
           <option value="marovelli">Mme Marovelli</option>
           <option value="berquet">M. Berquet</option>
         </select>
+        <label class="login-label" for="password">Mot de passe</label>
         <input id="password" type="password" placeholder="Mot de passe professeur" required>
         <button class="game-button primary" type="submit">Commencer la partie</button>
       </form>
@@ -55,9 +56,7 @@
 
       <aside class="side-panel">
         <section class="play-card current-card">
-          <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2></div></div>
-          <label class="series-picker" for="series-select">Série de questions</label>
-          <select id="series-select" class="series-select"></select>
+          <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2><small id="series-status"></small></div></div>
           <div class="dice-area"><div id="dice" class="dice">🎲</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le jeu</button></div>
           <p id="move-message" class="move-message">La question, le chrono et le tirage se lancent automatiquement.</p>
         </section>
@@ -84,7 +83,6 @@
       <div class="stage-actions"><button id="correct-answer" class="game-button primary is-hidden">✅ Réponse correcte (+2)</button><button id="wrong-answer" class="game-button danger is-hidden">❌ Réponse incorrecte (−1)</button></div>
     </div>
   </section>
-  <script src="app.js"></script>
-  <script src="flow-fixes.js"></script>
+  <script type="module" src="js/game.js"></script>
 </body>
 </html>
