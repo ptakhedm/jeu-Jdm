@@ -96,7 +96,8 @@ function validText(value) {
 async function adminData() {
   const content = await sql`SELECT students, question_sets, class_catalog FROM game_content WHERE id = 1`;
   const teacherRows = await sql`SELECT teacher_id, name, classes FROM teachers ORDER BY teacher_id`;
-  return { teachers: teacherRows, students: content[0].students, questionSets: content[0].question_sets, classCatalog: content[0].class_catalog };
+  const progression = await sql`SELECT class_name, position, rounds, next_question FROM class_progression ORDER BY class_name`;
+  return { teachers: teacherRows, students: content[0].students, questionSets: content[0].question_sets, classCatalog: content[0].class_catalog, progression };
 }
 
 async function updateContent(mutator) {
@@ -149,7 +150,9 @@ export default async function handler(request, response) {
         return response.status(200).json(await adminData());
       }
       if (body.action === "admin-delete-teacher") {
-        await sql`DELETE FROM teachers WHERE teacher_id = ${body.teacherId}`;
+        if (!validText(body.teacherId)) return response.status(400).json({ error: "Professeur invalide" });
+        const deleted = await sql`DELETE FROM teachers WHERE teacher_id = ${body.teacherId} RETURNING teacher_id`;
+        if (!deleted[0]) return response.status(404).json({ error: "Professeur introuvable" });
         return response.status(200).json(await adminData());
       }
       if (body.action === "admin-save-class") {
@@ -181,6 +184,14 @@ export default async function handler(request, response) {
       if (body.action === "admin-save-students") {
         if (!validText(body.className) || !Array.isArray(body.students)) return response.status(400).json({ error: "Liste d’élèves invalide" });
         await updateContent(content => { content.students[body.className] = body.students.filter(validText).map(name => name.trim()); });
+        return response.status(200).json(await adminData());
+      }
+      if (body.action === "admin-save-progression") {
+        const { className, position, rounds } = body;
+        if (!validText(className) || !Number.isInteger(position) || position < 0 || position > 223 || !Number.isInteger(rounds) || rounds < 0) return response.status(400).json({ error: "Progression invalide" });
+        const catalog = await sql`SELECT class_catalog FROM game_content WHERE id = 1`;
+        if (!catalog[0]?.class_catalog.some(item => item.name === className)) return response.status(404).json({ error: "Classe introuvable" });
+        await sql`UPDATE class_progression SET position = ${position}, rounds = ${rounds}, next_question = 0, updated_at = NOW() WHERE class_name = ${className}`;
         return response.status(200).json(await adminData());
       }
       return response.status(400).json({ error: "Action administrateur inconnue" });
