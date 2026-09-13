@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS game_content (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  teachers JSONB NOT NULL,
+  students JSONB NOT NULL,
+  question_sets JSONB NOT NULL,
+  labels JSONB NOT NULL,
+  class_catalog JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS class_progression (
+  class_name TEXT PRIMARY KEY,
+  position INTEGER NOT NULL DEFAULT 0,
+  rounds INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS game_events (
+  id BIGSERIAL PRIMARY KEY,
+  class_name TEXT NOT NULL,
+  series TEXT NOT NULL,
+  question_index INTEGER NOT NULL,
+  correct BOOLEAN NOT NULL,
+  position INTEGER NOT NULL,
+  rounds INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

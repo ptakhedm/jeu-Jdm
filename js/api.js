@@ -1,0 +1,23 @@
+const endpoint = "/api/game-state";
+
+async function request(url, options = {}) {
+  const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
+  if (!response.ok) throw new Error(`API ${response.status}`);
+  return response.json();
+}
+
+export async function loadGameSnapshot() {
+  return request(endpoint, { cache: "no-store" });
+}
+
+export async function saveGameState(className, progression, event = null) {
+  return request(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      className,
+      position: progression.pos,
+      rounds: progression.rounds,
+      ...(event || {})
+    })
+  });
+}
