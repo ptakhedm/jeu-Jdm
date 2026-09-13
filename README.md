@@ -31,7 +31,7 @@ Le projet utilise des modules JavaScript natifs. Depuis le dossier du projet, la
 
 - `index.html` : structure de l’interface et écran de projection.
 - `styles.css` : identité visuelle, mise en page et animations.
-- `js/data.js` : professeurs, classes, élèves, questions, corrections et figures.
+- `js/data.js` : professeurs, classes, élèves, progression, questions, corrections et figures. La fonction `updateClassProgression` constitue le point de branchement vers une future API/base de données.
 - `js/view.js` : rendu DOM/SVG, affichage des questions et mise à jour visuelle.
 - `js/game.js` : état de partie, règles, chrono, tirage au sort et événements.
 - `pack-1/figures/` : figures extraites des présentations.

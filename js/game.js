@@ -1,4 +1,4 @@
-import { teachers, classNames, classColors, students, questionSets } from "./data.js";
+import { teachers, classNames, classColors, classProgression, students, questionSets, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
 
 const state = {
@@ -14,15 +14,27 @@ const state = {
   waitingNext: false,
   finished: false,
   pendingAnswer: null,
-  classes: Object.fromEntries(classNames.map((name, index) => [name, { pos: 0, rounds: 0, color: classColors[index] }]))
+  debug: new URLSearchParams(window.location.search).get("debug") === "1",
+  classes: Object.fromEntries(classNames.map((name, index) => [name, {
+    pos: classProgression[name].position,
+    rounds: classProgression[name].rounds,
+    color: classColors[index]
+  }]))
 };
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
+function updateDebugMode() {
+  state.debug = $("debug-mode").checked;
+  if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
+}
+
 function syncSeriesToActiveClass() {
   const seriesCount = Object.keys(questionSets).length;
   const rounds = state.classes[state.activeClass]?.rounds || 0;
-  state.series = `Série ${(rounds % seriesCount) + 1}`;
+  const nextSeries = `Série ${(rounds % seriesCount) + 1}`;
+  if (state.series !== nextSeries) state.question = 0;
+  state.series = nextSeries;
   if ($("series-status")) $("series-status").textContent = state.series;
 }
 
@@ -34,6 +46,7 @@ async function moveClass(name, steps) {
   for (let index = 0; index < Math.abs(steps); index++) {
     const previous = data.pos;
     data.pos = Math.max(0, Math.min(223, data.pos + direction));
+    updateClassProgression(name, { position: data.pos });
     animatePawn(state, name, previous);
     await sleep(470);
   }
@@ -62,7 +75,7 @@ function highlightPrimeStop(position) {
   const cell = document.querySelectorAll("#game-board .cell")[position];
   if (!cell) return;
   cell.classList.add("prime-stop");
-  setTimeout(() => cell.classList.remove("prime-stop"), 1400);
+  setTimeout(() => cell.classList.remove("prime-stop"), 1800);
 }
 
 function finishQuestionTimer() {
@@ -74,7 +87,7 @@ function finishQuestionTimer() {
 
 function startTimer() {
   clearInterval(state.timer);
-  const seconds = questionSets[state.series][state.question][1];
+  const seconds = state.debug ? 3 : questionSets[state.series][state.question][1];
   let left = seconds;
   $("timer-value").textContent = left;
   $("timer-ring").style.setProperty("--progress", "100%");
@@ -204,6 +217,7 @@ async function closeCorrection() {
   const lastQuestion = state.question === questionSets[state.series].length - 1;
   if (lastQuestion) {
     state.classes[name].rounds += 1;
+    updateClassProgression(name, { rounds: state.classes[name].rounds });
     syncSeriesToActiveClass();
     renderClasses(state);
     state.waitingNext = false;
@@ -219,7 +233,18 @@ async function closeCorrection() {
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });
+$("debug-mode").checked = state.debug;
+$("debug-mode").addEventListener("change", updateDebugMode);
+$("teacher-select").addEventListener("change", () => {
+  if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
+});
 $("start-class").addEventListener("click", enterSelectedClass);
+$("class-selection-screen").addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    enterSelectedClass();
+  }
+});
 $("owned-class-choices").addEventListener("change", event => {
   document.querySelectorAll(".class-choice").forEach(label => label.classList.toggle("selected", label.contains(event.target)));
 });
@@ -239,3 +264,4 @@ $("roll-dice").addEventListener("click", launchQuestion);
 $("correct-answer").addEventListener("click", () => applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
+if (state.debug) updateDebugMode();
