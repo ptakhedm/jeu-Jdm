@@ -31,11 +31,12 @@ Le projet utilise des modules JavaScript natifs. Depuis le dossier du projet, la
 
 - `index.html` : structure de l’interface et écran de projection.
 - `styles.css` : identité visuelle, mise en page et animations.
-- `js/data.js` : professeurs, classes, élèves, progression, questions, corrections et figures. La fonction `updateClassProgression` constitue le point de branchement vers une future API/base de données.
+- `js/data.js` : configuration minimale du client et conteneurs vides remplis depuis l’API. Aucun mot de passe ni contenu métier sensible n’y est stocké.
 - `js/view.js` : rendu DOM/SVG, affichage des questions et mise à jour visuelle.
 - `js/game.js` : état de partie, règles, chrono, tirage au sort et événements.
 - `js/api.js` : communication avec l’API de sauvegarde et de synchronisation.
 - `api/game-state.js` : fonction serverless Vercel et initialisation des tables PostgreSQL.
+- `api/_content.js` : questions et corrections privées, utilisées uniquement par l’API et jamais importées par le navigateur.
 - `sql/schema.sql` : schéma de la base de données.
 - `pack-1/figures/` : figures extraites des présentations.
 
@@ -45,6 +46,10 @@ Le projet utilise `@neondatabase/serverless`, avec une base Neon créée depuis 
 Après cette initialisation, la base est la source de vérité ; les constantes de `js/data.js` servent uniquement d’amorçage si la base est vide ou inaccessible.
 
 - Les professeurs, classes/couleurs, élèves, questions, corrections, durées et chemins des figures sont stockés dans `game_content`.
+- La liste des élèves est chargée depuis `game_content.students` ; elle n’est plus embarquée dans le JavaScript client.
+- L’identification est vérifiée par l’API contre la table `teachers` ; les mots de passe ne sont jamais envoyés au navigateur.
+- Le navigateur reçoit uniquement les énoncés, durées et chemins d’images ; les corrections sont renvoyées par l’API seulement après l’enregistrement de la réponse.
+- Les professeurs sont également normalisés dans la table `teachers` (`teacher_id`, `name`, `password`, `classes`). Cette table est alimentée automatiquement à chaque appel de l’API.
 - Chaque réponse est enregistrée dans `game_events` avec la position et le tour de la classe.
 - La progression de chaque classe est sauvegardée dans `class_progression` après chaque déplacement.
 - Les clients connectés interrogent l’API toutes les 2 secondes afin de voir les déplacements des autres classes.

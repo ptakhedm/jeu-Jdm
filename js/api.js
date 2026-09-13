@@ -10,6 +10,20 @@ export async function loadGameSnapshot() {
   return request(endpoint, { cache: "no-store" });
 }
 
+export async function authenticateTeacher(teacherId, password) {
+  return request(endpoint, {
+    method: "POST",
+    body: JSON.stringify({ action: "login", teacherId, password })
+  });
+}
+
+export async function loadDebugPassword(teacherId) {
+  return request(endpoint, {
+    method: "POST",
+    body: JSON.stringify({ action: "debug-password", teacherId })
+  });
+}
+
 export async function saveGameState(className, progression, event = null) {
   return request(endpoint, {
     method: "POST",

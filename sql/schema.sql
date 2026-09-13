@@ -1,3 +1,11 @@
+CREATE TABLE IF NOT EXISTS teachers (
+  teacher_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  password TEXT NOT NULL,
+  classes JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS game_content (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   teachers JSONB NOT NULL,

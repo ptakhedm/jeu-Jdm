@@ -1,6 +1,6 @@
-import { DEBUG_ENABLED, teachers, classNames, classColors, classCatalog, classProgression, students, questionSets, labels, updateClassProgression } from "./data.js";
+import { DEBUG_ENABLED, teachers, classNames, classColors, classCatalog, classProgression, students, labels, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
-import { loadGameSnapshot, saveGameState } from "./api.js";
+import { authenticateTeacher, loadDebugPassword, loadGameSnapshot, saveGameState } from "./api.js";
 
 const state = {
   teacher: null,
@@ -25,10 +25,12 @@ const state = {
 };
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+let questionSets = {};
 
 async function persistClassState(name, event = null) {
   try {
     const snapshot = await saveGameState(name, state.classes[name], event);
+    if (snapshot.correction !== undefined) $("correction-text").textContent = snapshot.correction;
     applyRemoteSnapshot(snapshot, false);
   } catch (error) {
     console.warn("Synchronisation indisponible, fonctionnement local conservé.", error);
@@ -189,9 +191,11 @@ function runStudentDraw() {
   }, 90);
 }
 
-function login() {
-  const teacher = teachers[$("teacher-select").value];
-  if (!teacher || $("password").value !== teacher.password) {
+async function login() {
+  if (!Object.keys(teachers).length) await synchronizeGameState(false);
+  const result = await authenticateTeacher($("teacher-select").value, $("password").value).catch(() => null);
+  const teacher = result?.teacher;
+  if (!teacher) {
     notify("Identifiants incorrects");
     $("password").value = "";
     return;
@@ -253,6 +257,12 @@ function applyAnswer(correct) {
   clearInterval(state.timer);
   state.challengeActive = false;
   state.pendingAnswer = correct;
+  void persistClassState(state.activeClass, {
+    event: "answer",
+    series: state.series,
+    questionIndex: state.question,
+    correct
+  });
   $("correct-answer").disabled = true;
   $("wrong-answer").disabled = true;
   setAnswerButtons(false);
@@ -267,8 +277,6 @@ async function closeCorrection() {
   if (typeof state.pendingAnswer !== "boolean") return;
   const correct = state.pendingAnswer;
   state.pendingAnswer = null;
-  const answerSeries = state.series;
-  const answerQuestion = state.question;
   const name = state.activeClass;
   let delta = correct ? 2 : -1;
   if (correct) state.correctAnswers += 1;
@@ -302,12 +310,7 @@ async function closeCorrection() {
     $("roll-dice").textContent = "➡️ Question suivante";
     $("move-message").textContent = "Le pion a joué. Lancez la question suivante.";
   }
-  void persistClassState(name, {
-    event: "answer",
-    series: answerSeries,
-    questionIndex: answerQuestion,
-    correct
-  });
+  void persistClassState(name);
 }
 
 $("login-form").addEventListener("submit", event => { event.preventDefault(); login(); });
@@ -316,7 +319,7 @@ $("class-selection-form").addEventListener("submit", event => {
   enterSelectedClass();
 });
 $("teacher-select").addEventListener("change", () => {
-  if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
+  if (state.debug) loadDebugPassword($("teacher-select").value).then(result => { $("password").value = result.password; }).catch(() => {});
 });
 document.addEventListener("keydown", event => {
   if (event.key !== "Enter" || $("class-selection-screen").classList.contains("is-hidden")) return;
@@ -343,5 +346,6 @@ $("roll-dice").addEventListener("click", launchQuestion);
 $("correct-answer").addEventListener("click", () => applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
-if (state.debug) $("password").value = teachers[$("teacher-select").value]?.password || "";
-void synchronizeGameState(false);
+void synchronizeGameState(false).then(() => {
+  if (state.debug) loadDebugPassword($("teacher-select").value).then(result => { $("password").value = result.password; }).catch(() => {});
+});

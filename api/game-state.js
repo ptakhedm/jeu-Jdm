@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { teachers, students, questionSets, labels, classCatalog, classProgression } from "../js/data.js";
+import { DEBUG_ENABLED, teachers, students, labels, classCatalog, classProgression, questionSets } from "./_content.js";
 
 const initialClasses = Object.entries(classProgression).map(([className, progression]) => ({
   className,
@@ -11,6 +11,15 @@ if (!databaseUrl) throw new Error("DATABASE_URL ou POSTGRES_URL est requis");
 const sql = neon(databaseUrl);
 
 async function ensureDatabase() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS teachers (
+      teacher_id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      password TEXT NOT NULL,
+      classes JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS game_content (
       id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -52,6 +61,13 @@ async function ensureDatabase() {
     UPDATE game_content SET class_catalog = ${JSON.stringify(classCatalog)}::jsonb
     WHERE id = 1 AND class_catalog IS NULL
   `;
+  for (const [teacherId, teacher] of Object.entries(teachers)) {
+    await sql`
+      INSERT INTO teachers (teacher_id, name, password, classes)
+      VALUES (${teacherId}, ${teacher.name}, ${teacher.password}, ${JSON.stringify(teacher.classes)}::jsonb)
+      ON CONFLICT (teacher_id) DO UPDATE SET name = EXCLUDED.name, password = EXCLUDED.password, classes = EXCLUDED.classes, updated_at = NOW()
+    `;
+  }
   for (const item of initialClasses) {
     await sql`
       INSERT INTO class_progression (class_name, position, rounds)
@@ -63,9 +79,18 @@ async function ensureDatabase() {
 
 async function snapshot() {
   const content = await sql`SELECT teachers, students, question_sets, labels, class_catalog FROM game_content WHERE id = 1`;
+  const teacherRows = await sql`SELECT teacher_id, name, password, classes FROM teachers ORDER BY teacher_id`;
   const classes = await sql`SELECT class_name, position, rounds, updated_at FROM class_progression ORDER BY class_name`;
+  const teachersFromDatabase = Object.fromEntries(teacherRows.map(teacher => [teacher.teacher_id, {
+    name: teacher.name,
+    classes: teacher.classes
+  }]));
   return {
-    content: content[0],
+    content: {
+      ...content[0],
+      teachers: teachersFromDatabase,
+      question_sets: Object.fromEntries(Object.entries(content[0].question_sets).map(([series, questions]) => [series, questions.map(([text, seconds, , image]) => [text, seconds, ...(image ? [image] : [])])] ))
+    },
     classes
   };
 }
@@ -79,10 +104,22 @@ export default async function handler(request, response) {
 
   try {
     await ensureDatabase();
+    const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+    if (request.method === "POST" && body.action === "login") {
+      const result = await sql`SELECT teacher_id, name, password, classes FROM teachers WHERE teacher_id = ${body.teacherId}`;
+      const teacher = result[0];
+      if (!teacher || teacher.password !== body.password) return response.status(401).json({ error: "Identifiants incorrects" });
+      return response.status(200).json({ teacher: { id: teacher.teacher_id, name: teacher.name, classes: teacher.classes } });
+    }
+    if (request.method === "POST" && body.action === "debug-password") {
+      if (!DEBUG_ENABLED) return response.status(403).json({ error: "Mode debug désactivé" });
+      const result = await sql`SELECT password FROM teachers WHERE teacher_id = ${body.teacherId}`;
+      if (!result[0]) return response.status(404).json({ error: "Professeur inconnu" });
+      return response.status(200).json({ password: result[0].password });
+    }
     if (request.method === "GET") return response.status(200).json(await snapshot());
     if (request.method !== "POST") return response.status(405).json({ error: "Méthode non autorisée" });
 
-    const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
     const { className, position, rounds } = body;
     if (!className || !Number.isInteger(position) || !Number.isInteger(rounds)) {
       return response.status(400).json({ error: "Progression de classe invalide" });
@@ -102,6 +139,9 @@ export default async function handler(request, response) {
         INSERT INTO game_events (class_name, series, question_index, correct, position, rounds)
         VALUES (${className}, ${body.series}, ${body.questionIndex}, ${body.correct}, ${position}, ${rounds})
       `;
+      const storedContent = await sql`SELECT question_sets FROM game_content WHERE id = 1`;
+      const correction = storedContent[0]?.question_sets?.[body.series]?.[body.questionIndex]?.[2];
+      return response.status(200).json({ ...(await snapshot()), correction });
     }
     return response.status(200).json(await snapshot());
   } catch (error) {
