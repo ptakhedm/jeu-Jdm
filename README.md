@@ -42,6 +42,8 @@ Le projet utilise des modules JavaScript natifs. Depuis le dossier du projet, la
 
 ## Sauvegarde Vercel/PostgreSQL
 
+La console [admin.html](admin.html) est protégée par la variable d’environnement Vercel `ADMIN_PASSWORD`. Ajoutez-y un mot de passe fort avant d’ouvrir `/admin.html` ; sans cette variable, la route `/api/admin` répond volontairement avec l’erreur 503.
+
 Le projet utilise `@neondatabase/serverless`, avec une base Neon créée depuis les intégrations Vercel. L’API accepte `DATABASE_URL` (recommandé par Neon) ou `POSTGRES_URL` (compatibilité Vercel). Au premier appel de l’API, les données du jeu sont initialisées dans `game_content` et la progression dans `class_progression`.
 Après cette initialisation, la base est la source de vérité ; les constantes de `js/data.js` servent uniquement d’amorçage si la base est vide ou inaccessible.
 
