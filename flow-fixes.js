@@ -2,9 +2,16 @@
 (function () {
   const $ = id => document.getElementById(id);
 
-  // Durée de débogage : la première question est toujours limitée à 3 secondes.
-  Object.values(questionSets).forEach(questions => {
-    questions.forEach(question => { question[1] = 3; });
+  const seriesSelect = $("series-select");
+  seriesSelect.innerHTML = Object.keys(questionSets).map(series => `<option value="${series}">${series}</option>`).join("");
+  seriesSelect.value = state.series;
+  seriesSelect.addEventListener("change", () => {
+    state.series = seriesSelect.value;
+    state.question = 0;
+    state.waitingNext = false;
+    state.finished = false;
+    freshLaunchButton.textContent = "🎲 Lancer le jeu";
+    updateQuestion();
   });
 
   // L’écran de jeu n’a plus de sélecteur de classe : la classe est choisie avant l’entrée.
@@ -49,7 +56,7 @@
   function startDebugTimer() {
     clearInterval(state.timer);
     const question = questionSets[state.series][state.question];
-    const seconds = state.question === 0 ? 3 : question[1];
+    const seconds = question[1];
     let left = seconds;
     $("timer-value").textContent = left;
     $("timer-ring").style.setProperty("--progress", "100%");

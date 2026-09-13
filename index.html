@@ -56,6 +56,8 @@
       <aside class="side-panel">
         <section class="play-card current-card">
           <div class="card-heading"><span class="step">01</span><div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="current-team">6ème 1</h2></div></div>
+          <label class="series-picker" for="series-select">Série de questions</label>
+          <select id="series-select" class="series-select"></select>
           <div class="dice-area"><div id="dice" class="dice">🎲</div><button id="roll-dice" class="game-button primary big-button">🎲 Lancer le jeu</button></div>
           <p id="move-message" class="move-message">La question, le chrono et le tirage se lancent automatiquement.</p>
         </section>
@@ -74,6 +76,7 @@
       <div class="stage-top"><span class="stage-badge">DÉFI DU TOUR</span><span id="stage-team">6ème 1</span></div>
       <p id="stage-counter" class="stage-counter">Question 1 / 5</p>
       <h2 id="stage-question">Question</h2>
+      <img id="question-figure" class="question-figure is-hidden" alt="">
       <div id="question-phase"><div class="timer-zone"><div id="timer-ring" class="timer-ring"><span id="timer-value">45</span><small>secondes</small></div><div class="timer-copy"><strong id="timer-label">À toi de réfléchir !</strong><span>Le temps défile…</span></div></div></div>
       <div id="draw-phase" class="draw-phase is-hidden"><div class="draw-spinner">🎲</div><strong>Tirage au sort de l’élève…</strong><span id="draw-animation-name">Préparation du tirage</span></div>
       <div id="student-phase" class="student-phase is-hidden"><span>Élève désigné</span><strong id="stage-student-name"></strong></div>
