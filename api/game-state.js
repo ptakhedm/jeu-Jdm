@@ -164,13 +164,26 @@ export default async function handler(request, response) {
       if (body.action === "admin-save-class") {
         const item = body.item || {};
         if (!validText(item.name) || !/^#[0-9a-f]{6}$/i.test(item.color || "")) return response.status(400).json({ error: "Classe invalide" });
+        const newName = item.name.trim();
+        const originalName = validText(body.original) ? body.original.trim() : null;
+        const renamed = Boolean(originalName) && originalName !== newName;
         await updateContent(content => {
-          const index = content.classCatalog.findIndex(entry => entry.name === item.name);
-          if (index >= 0) content.classCatalog[index] = { name: item.name.trim(), color: item.color };
-          else content.classCatalog.push({ name: item.name.trim(), color: item.color });
-          content.students[item.name.trim()] ||= [];
+          const index = content.classCatalog.findIndex(entry => entry.name === (originalName || newName));
+          if (index >= 0) content.classCatalog[index] = { name: newName, color: item.color };
+          else content.classCatalog.push({ name: newName, color: item.color });
+          if (renamed) {
+            // Le renommage conserve les élèves sous le nouveau nom.
+            content.students[newName] = content.students[originalName] || [];
+            delete content.students[originalName];
+          } else {
+            content.students[newName] ||= [];
+          }
         });
-        await sql`INSERT INTO class_progression (class_name, position, rounds, next_question) VALUES (${item.name.trim()}, 0, 0, 0) ON CONFLICT (class_name) DO NOTHING`;
+        if (renamed) {
+          // Le renommage conserve la progression de la classe.
+          await sql`UPDATE class_progression SET class_name = ${newName}, updated_at = NOW() WHERE class_name = ${originalName}`;
+        }
+        await sql`INSERT INTO class_progression (class_name, position, rounds, next_question) VALUES (${newName}, 0, 0, 0) ON CONFLICT (class_name) DO NOTHING`;
         return response.status(200).json(await adminData());
       }
       if (body.action === "admin-delete-class") {
@@ -197,7 +210,12 @@ export default async function handler(request, response) {
         if (!validText(className) || !Number.isInteger(position) || position < 0 || position > 223 || !Number.isInteger(rounds) || rounds < 0 || !Number.isInteger(nextQuestion) || nextQuestion < 0) return response.status(400).json({ error: "Progression invalide" });
         const catalog = await sql`SELECT class_catalog FROM game_content WHERE id = 1`;
         if (!catalog[0]?.class_catalog.some(item => item.name === className)) return response.status(404).json({ error: "Classe introuvable" });
-        await sql`UPDATE class_progression SET position = ${position}, rounds = ${rounds}, next_question = ${nextQuestion}, updated_at = NOW() WHERE class_name = ${className}`;
+        await sql`
+          INSERT INTO class_progression (class_name, position, rounds, next_question)
+          VALUES (${className}, ${position}, ${rounds}, ${nextQuestion})
+          ON CONFLICT (class_name) DO UPDATE
+          SET position = EXCLUDED.position, rounds = EXCLUDED.rounds, next_question = EXCLUDED.next_question, updated_at = NOW()
+        `;
         return response.status(200).json(await adminData());
       }
       return response.status(400).json({ error: "Action administrateur inconnue" });
