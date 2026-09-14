@@ -193,11 +193,11 @@ export default async function handler(request, response) {
         return response.status(200).json(await adminData());
       }
       if (body.action === "admin-save-progression") {
-        const { className, position, rounds } = body;
-        if (!validText(className) || !Number.isInteger(position) || position < 0 || position > 223 || !Number.isInteger(rounds) || rounds < 0) return response.status(400).json({ error: "Progression invalide" });
+        const { className, position, rounds, nextQuestion = 0 } = body;
+        if (!validText(className) || !Number.isInteger(position) || position < 0 || position > 223 || !Number.isInteger(rounds) || rounds < 0 || !Number.isInteger(nextQuestion) || nextQuestion < 0) return response.status(400).json({ error: "Progression invalide" });
         const catalog = await sql`SELECT class_catalog FROM game_content WHERE id = 1`;
         if (!catalog[0]?.class_catalog.some(item => item.name === className)) return response.status(404).json({ error: "Classe introuvable" });
-        await sql`UPDATE class_progression SET position = ${position}, rounds = ${rounds}, next_question = 0, updated_at = NOW() WHERE class_name = ${className}`;
+        await sql`UPDATE class_progression SET position = ${position}, rounds = ${rounds}, next_question = ${nextQuestion}, updated_at = NOW() WHERE class_name = ${className}`;
         return response.status(200).json(await adminData());
       }
       return response.status(400).json({ error: "Action administrateur inconnue" });
