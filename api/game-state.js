@@ -183,7 +183,21 @@ export default async function handler(request, response) {
           // Le renommage conserve la progression de la classe.
           await sql`UPDATE class_progression SET class_name = ${newName}, updated_at = NOW() WHERE class_name = ${originalName}`;
         }
-        await sql`INSERT INTO class_progression (class_name, position, rounds, next_question) VALUES (${newName}, 0, 0, 0) ON CONFLICT (class_name) DO NOTHING`;
+        const { position, rounds, nextQuestion } = body;
+        const hasProgression = Number.isInteger(position) && position >= 0 && position <= 223
+          && Number.isInteger(rounds) && rounds >= 0
+          && Number.isInteger(nextQuestion) && nextQuestion >= 0;
+        if (hasProgression) {
+          // « Enregistrer » sauvegarde la classe ET la progression du pion.
+          await sql`
+            INSERT INTO class_progression (class_name, position, rounds, next_question)
+            VALUES (${newName}, ${position}, ${rounds}, ${nextQuestion})
+            ON CONFLICT (class_name) DO UPDATE
+            SET position = EXCLUDED.position, rounds = EXCLUDED.rounds, next_question = EXCLUDED.next_question, updated_at = NOW()
+          `;
+        } else {
+          await sql`INSERT INTO class_progression (class_name, position, rounds, next_question) VALUES (${newName}, 0, 0, 0) ON CONFLICT (class_name) DO NOTHING`;
+        }
         return response.status(200).json(await adminData());
       }
       if (body.action === "admin-delete-class") {
