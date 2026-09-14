@@ -333,11 +333,11 @@ async function closeCorrection() {
   }
   $("question-modal").classList.add("is-hidden");
   await moveClass(name, delta);
-  if (!correct && isPrime(state.classes[name].pos)) {
+  if (isPrime(state.classes[name].pos)) {
     highlightPrimeStop(state.classes[name].pos);
-    notify("⏸️ Arrêt sur une case première ! Bonus de 2 cases !");
+    notify("⏸️ Arrêt sur une case première ! Bonus de 3 cases !");
     await sleep(1200);
-    await moveClass(name, 2);
+    await moveClass(name, 3);
   }
   const lastQuestion = state.question === questionSets[state.series].length - 1;
   if (lastQuestion) {
