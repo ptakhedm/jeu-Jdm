@@ -1,0 +1,114 @@
+/* Spectres de mathématiciens qui hantent le jeu. */
+
+.spirit-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.spirit {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  animation: spirit-appear 1.2s ease forwards;
+  filter: drop-shadow(0 0 22px rgba(140, 110, 220, .6));
+  transition: opacity 1s ease;
+}
+
+.spirit.fading {
+  opacity: 0;
+}
+
+.spirit-body {
+  font-size: 58px;
+  line-height: 1;
+  animation: spirit-bob 2.6s ease-in-out infinite;
+  opacity: .88;
+}
+
+.spirit-speech {
+  max-width: 240px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(28, 18, 52, .82);
+  color: #efe6ff;
+  border: 1px solid rgba(190, 160, 255, .5);
+  box-shadow: 0 0 24px rgba(120, 80, 200, .45);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+  backdrop-filter: blur(3px);
+}
+
+.spirit-speech strong {
+  display: block;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #c9b2ff;
+  margin-bottom: 3px;
+}
+
+/* Spectre errant : apparaît, flotte, disparaît. */
+.spirit.wanderer {
+  animation: spirit-appear 1.2s ease forwards, spirit-drift 5.4s ease-in-out forwards;
+}
+
+/* Fantôme félicitant : teinte dorée. */
+.spirit.cheerer .spirit-speech {
+  background: rgba(60, 42, 8, .85);
+  border-color: rgba(255, 214, 110, .65);
+  box-shadow: 0 0 26px rgba(255, 190, 60, .5);
+  color: #fff3d0;
+}
+
+.spirit.cheerer .spirit-speech strong {
+  color: #ffd66e;
+}
+
+.spirit.cheerer {
+  filter: drop-shadow(0 0 24px rgba(255, 200, 80, .65));
+}
+
+/* Fantôme encourageant : teinte bleutée et douce. */
+.spirit.comforter .spirit-speech {
+  background: rgba(14, 34, 58, .85);
+  border-color: rgba(120, 190, 255, .6);
+  box-shadow: 0 0 26px rgba(80, 150, 230, .5);
+  color: #dceeff;
+}
+
+.spirit.comforter .spirit-speech strong {
+  color: #8ec6ff;
+}
+
+.spirit.comforter {
+  filter: drop-shadow(0 0 24px rgba(90, 160, 240, .6));
+}
+
+@keyframes spirit-appear {
+  from { opacity: 0; transform: translateY(18px) scale(.85); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spirit-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes spirit-drift {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(60px); }
+  100% { transform: translateX(-30px); }
+}
+
+/* Respect des préférences d'accessibilité. */
+@media (prefers-reduced-motion: reduce) {
+  .spirit-body { animation: none; }
+  .spirit.wanderer { animation: spirit-appear 1.2s ease forwards; }
+}

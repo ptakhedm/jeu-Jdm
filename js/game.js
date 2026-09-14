@@ -1,6 +1,8 @@
 import { DEBUG_ENABLED, teachers, classNames, classColors, classCatalog, classProgression, students, labels, updateClassProgression } from "./data.js";
 import { $, animatePawn, isPrime, notify, renderBoard, renderClasses, updateQuestion } from "./view.js";
 import { authenticateTeacher, loadDebugPassword, loadGameSnapshot, recordAnswer, saveGameState } from "./api.js";
+import { playCoin, playCheer, playEncourage, playFootstep } from "./sounds.js";
+import { startHaunting, summonCheer, summonComfort } from "./spirits.js";
 
 const state = {
   teacher: null,
@@ -137,6 +139,7 @@ async function moveClass(name, steps) {
     const previous = data.pos;
     data.pos = Math.max(0, Math.min(223, data.pos + direction));
     updateClassProgression(name, { position: data.pos });
+    playFootstep();
     animatePawn(state, name, previous);
     await sleep(470);
   }
@@ -262,6 +265,7 @@ async function enterSelectedClass(className = null) {
   $("board-loading-screen").classList.add("is-hidden");
   $("game-screen").classList.remove("is-hidden");
   startRemoteSync();
+  startHaunting();
 }
 
 function launchQuestion() {
@@ -316,6 +320,13 @@ async function applyAnswer(correct) {
   $("timer-label").textContent = correct
     ? "Bonne réponse : ferme la correction pour déplacer le pion."
     : "Réponse incorrecte : ferme la correction pour déplacer le pion.";
+  if (correct) {
+    playCheer();
+    summonCheer();
+  } else {
+    playEncourage();
+    summonComfort();
+  }
 }
 
 async function closeCorrection() {
@@ -333,11 +344,12 @@ async function closeCorrection() {
   }
   $("question-modal").classList.add("is-hidden");
   await moveClass(name, delta);
-  if (!correct && isPrime(state.classes[name].pos)) {
+  if (state.classes[name].pos < 223 && isPrime(state.classes[name].pos)) {
     highlightPrimeStop(state.classes[name].pos);
-    notify("⏸️ Arrêt sur une case première ! Bonus de 2 cases !");
+    playCoin();
+    notify("⏸️ Arrêt sur une case première ! Bonus de 3 cases !");
     await sleep(1200);
-    await moveClass(name, 2);
+    await moveClass(name, 3);
   }
   const lastQuestion = state.question === questionSets[state.series].length - 1;
   if (lastQuestion) {
