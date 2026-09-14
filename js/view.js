@@ -1,4 +1,4 @@
-import { classNames, classColors, labels } from "./data.js";
+import { classNames, classColors, labels, teachers } from "./data.js";
 
 export const $ = id => document.getElementById(id);
 const svgNS = "http://www.w3.org/2000/svg";
@@ -44,6 +44,13 @@ function svg(name, attrs = {}) {
   return node;
 }
 
+// Une classe sans professeur associé ne possède pas de pion sur le plateau.
+export function taughtClassNames() {
+  const owned = new Set();
+  Object.values(teachers).forEach(teacher => (teacher.classes || []).forEach(name => owned.add(name)));
+  return classNames.filter(name => owned.has(name));
+}
+
 export function renderBoard(state) {
   const board = $("game-board");
   board.setAttribute("viewBox", "0 0 900 900");
@@ -74,7 +81,8 @@ export function renderBoard(state) {
     board.appendChild(group);
   });
 
-  classNames.forEach((name, index) => {
+  taughtClassNames().forEach(name => {
+    const index = classNames.indexOf(name);
     const pawn = svg("g", { id: `pawn-${index}`, class: "pawn" });
     pawn.appendChild(svg("circle", { cx: 0, cy: 3, r: 19, fill: "#704026", opacity: ".28" }));
     pawn.appendChild(svg("circle", { cx: 0, cy: 0, r: 17, fill: classColors[index], stroke: "#fff", "stroke-width": 4 }));
@@ -97,7 +105,7 @@ function pawnPosition(state, name, slotByPosition) {
 
 export function positionPawns(state) {
   const seen = {};
-  classNames.forEach(name => {
+  taughtClassNames().forEach(name => {
     const position = state.classes[name].pos;
     seen[position] = (seen[position] || 0) + 1;
     const target = pawnPosition(state, name, seen);
