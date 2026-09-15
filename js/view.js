@@ -165,6 +165,8 @@ export function updateQuestion(state, questionSets) {
   $("student-phase").classList.add("is-hidden");
   $("question-phase").classList.remove("is-hidden");
   $("stage-question").classList.remove("is-hidden");
+  $("show-correction").classList.add("is-hidden");
+  $("show-correction").disabled = false;
   $("correct-answer").classList.add("is-hidden");
   $("wrong-answer").classList.add("is-hidden");
   $("correct-answer").disabled = false;

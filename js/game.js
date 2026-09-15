@@ -157,6 +157,8 @@ function resetQuestionView() {
   $("stage-correction").classList.add("is-hidden");
   $("close-correction").classList.add("is-hidden");
   setAnswerButtons(false);
+  $("show-correction").classList.add("is-hidden");
+  $("show-correction").disabled = false;
   $("correct-answer").disabled = false;
   $("wrong-answer").disabled = false;
   $("timer-label").textContent = "À toi de réfléchir !";
@@ -208,9 +210,21 @@ function runStudentDraw() {
       $("draw-phase").classList.add("is-hidden");
       $("student-phase").classList.remove("is-hidden");
       $("stage-student-name").textContent = chosen;
-      setAnswerButtons(true);
+      $("show-correction").classList.remove("is-hidden");
+      $("show-correction").disabled = false;
+      $("timer-label").textContent = "À l’élève de donner sa réponse !";
     }
   }, 90);
+}
+
+function revealCorrection() {
+  if (!state.challengeActive || state.moving) return;
+  $("show-correction").disabled = true;
+  $("show-correction").classList.add("is-hidden");
+  $("correction-text").textContent = questionSets[state.series][state.question][2] || "Correction indisponible.";
+  $("stage-correction").classList.remove("is-hidden");
+  setAnswerButtons(true);
+  $("timer-label").textContent = "À vous de juger la réponse de l’élève !";
 }
 
 async function login() {
@@ -299,8 +313,6 @@ async function applyAnswer(correct) {
   $("correct-answer").disabled = true;
   $("wrong-answer").disabled = true;
   setAnswerButtons(false);
-  $("correction-text").textContent = questionSets[state.series][state.question][2] || "Correction indisponible.";
-  $("stage-correction").classList.remove("is-hidden");
   $("close-correction").classList.remove("is-hidden");
   $("close-correction").disabled = true;
   $("timer-label").textContent = "Enregistrement de la réponse…";
@@ -391,6 +403,7 @@ $("logout").addEventListener("click", () => {
   $("login-screen").classList.remove("is-hidden");
 });
 $("roll-dice").addEventListener("click", launchQuestion);
+$("show-correction").addEventListener("click", revealCorrection);
 $("correct-answer").addEventListener("click", () => void applyAnswer(true));
 $("wrong-answer").addEventListener("click", () => void applyAnswer(false));
 $("close-correction").addEventListener("click", closeCorrection);
