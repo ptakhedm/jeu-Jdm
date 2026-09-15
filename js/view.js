@@ -61,7 +61,6 @@ export function renderBoard(state) {
   board.appendChild(svg("polyline", { points: path, fill: "none", stroke: "#fff0bd", "stroke-width": 43, "stroke-linecap": "round", "stroke-linejoin": "round" }));
   const finish = svg("g", { class: "palace" });
   finish.appendChild(svg("circle", { class: "palace-glow", cx: 450, cy: 450, r: 94, fill: "#f6c95d" }));
-  finish.appendChild(svg("circle", { class: "palace-ring", cx: 450, cy: 450, r: 88, fill: "none", stroke: "#d18a27", "stroke-width": 3, "stroke-dasharray": "10 12" }));
   finish.appendChild(svg("circle", { cx: 450, cy: 450, r: 76, fill: "#fff8e8", stroke: "#9c612e", "stroke-width": 5 }));
   const palaceDefs = svg("defs");
   const palaceClip = svg("clipPath", { id: "palace-clip" });
@@ -93,7 +92,6 @@ export function renderBoard(state) {
   const start = points[0];
   const startDecoration = svg("g", { class: "start-decoration" });
   startDecoration.appendChild(svg("circle", { class: "start-halo", cx: start.x, cy: start.y, r: 32, fill: "#9fd0f0" }));
-  startDecoration.appendChild(svg("circle", { class: "start-ring", cx: start.x, cy: start.y, r: 28.5, fill: "none", stroke: "#1c5f92", "stroke-width": 2.5, "stroke-dasharray": "6 7" }));
   startDecoration.appendChild(svg("circle", { cx: start.x, cy: start.y, r: 23.5, fill: "#5fa8dc", stroke: "#215b86", "stroke-width": 4 }));
   const startDefs = svg("defs");
   const startClip = svg("clipPath", { id: "start-clip" });

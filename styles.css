@@ -31,14 +31,10 @@
 .cell.prime-stop circle{animation:prime-stop-pulse-stable .6s ease-in-out 3;transform:none!important;transform-box:initial;filter:drop-shadow(0 0 8px #ffb300)}
 @keyframes prime-stop-pulse-stable{0%,100%{stroke:#fff4a3;stroke-width:5;filter:drop-shadow(0 0 5px #ffb300)}50%{stroke:#fff;stroke-width:9;filter:drop-shadow(0 0 18px #ffb300)}}
 .start-decoration .start-halo{opacity:.5;animation:start-halo-pulse 2.6s ease-in-out infinite}
-.start-decoration .start-ring{transform-box:fill-box;transform-origin:center;animation:start-ring-spin 16s linear infinite}
 @keyframes start-halo-pulse{50%{opacity:.85}}
-@keyframes start-ring-spin{to{transform:rotate(360deg)}}
-.palace .palace-ring{transform-box:fill-box;transform-origin:center;animation:palace-ring-spin 26s linear infinite}
 .start-decoration .start-portrait{transform-box:fill-box;transform-origin:center;animation:start-portrait-bob 2.4s ease-in-out infinite}
 @keyframes start-portrait-bob{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-2.5px) rotate(2.5deg)}}
 .palace .palace-portrait{transform-box:fill-box;transform-origin:center;animation:palace-portrait-float 4.5s ease-in-out infinite}
 @keyframes palace-portrait-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .palace .palace-glow{animation:palace-glow-pulse 4s ease-in-out infinite}
 @keyframes palace-glow-pulse{0%,100%{opacity:.15}50%{opacity:.4}}
-@keyframes palace-ring-spin{to{transform:rotate(360deg)}}
