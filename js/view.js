@@ -69,7 +69,7 @@ export function renderBoard(state) {
   palaceDefs.appendChild(palaceClip);
   finish.appendChild(palaceDefs);
   const palacePortrait = svg("g", { class: "palace-portrait" });
-  const palaceImage = svg("image", { href: "assets/palais-maths.png", x: 379, y: 379, width: 142, height: 142, preserveAspectRatio: "xMidYMid slice" });
+  const palaceImage = svg("image", { href: "assets/palais-maths.jpg", x: 379, y: 379, width: 142, height: 142, preserveAspectRatio: "xMidYMid slice" });
   const palaceWindow = svg("g", { "clip-path": "url(#palace-clip)" });
   palaceWindow.appendChild(palaceImage);
   palacePortrait.appendChild(palaceWindow);
@@ -102,7 +102,7 @@ export function renderBoard(state) {
   startDecoration.appendChild(startDefs);
   const startPortrait = svg("g", { class: "start-portrait" });
   const startWindow = svg("g", { "clip-path": "url(#start-clip)" });
-  startWindow.appendChild(svg("image", { href: "assets/oie-depart.png", x: start.x - 21.5, y: start.y - 21.5, width: 43, height: 43, preserveAspectRatio: "xMidYMid slice" }));
+  startWindow.appendChild(svg("image", { href: "assets/oie-depart.jpg", x: start.x - 21.5, y: start.y - 21.5, width: 43, height: 43, preserveAspectRatio: "xMidYMid slice" }));
   startPortrait.appendChild(startWindow);
   startDecoration.appendChild(startPortrait);
   const startLabel = svg("text", { x: start.x, y: start.y + 45, "text-anchor": "middle", fill: "#1c5f92", "font-size": 10.5, "font-weight": 900, "letter-spacing": ".1em" });
