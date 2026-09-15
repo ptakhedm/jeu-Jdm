@@ -30,3 +30,9 @@
 .card-heading small{display:block;margin-top:2px;color:#9c5a2f;font-size:.72rem;font-weight:900}
 .cell.prime-stop circle{animation:prime-stop-pulse-stable .6s ease-in-out 3;transform:none!important;transform-box:initial;filter:drop-shadow(0 0 8px #ffb300)}
 @keyframes prime-stop-pulse-stable{0%,100%{stroke:#fff4a3;stroke-width:5;filter:drop-shadow(0 0 5px #ffb300)}50%{stroke:#fff;stroke-width:9;filter:drop-shadow(0 0 18px #ffb300)}}
+.start-decoration .start-halo{opacity:.5;animation:start-halo-pulse 2.6s ease-in-out infinite}
+.start-decoration .start-ring{transform-box:fill-box;transform-origin:center;animation:start-ring-spin 16s linear infinite}
+@keyframes start-halo-pulse{50%{opacity:.85}}
+@keyframes start-ring-spin{to{transform:rotate(360deg)}}
+.palace .palace-ring{transform-box:fill-box;transform-origin:center;animation:palace-ring-spin 26s linear infinite}
+@keyframes palace-ring-spin{to{transform:rotate(360deg)}}
